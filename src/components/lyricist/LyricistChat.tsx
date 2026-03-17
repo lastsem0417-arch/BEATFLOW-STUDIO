@@ -78,7 +78,8 @@ export default function LyricistChat({ selectedUser, currentUser }: any) {
             </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 custom-scrollbar bg-transparent">
+        {/* 🔥 FIX: data-lenis-prevent="true" add kiya taaki scroll hijack na ho 🔥 */}
+        <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 custom-scrollbar bg-transparent" data-lenis-prevent="true">
             {chatMessages.length === 0 ? (
                <div className="flex flex-col items-center justify-center h-full opacity-30 text-center">
                    <span className="text-3xl mb-2">💬</span>

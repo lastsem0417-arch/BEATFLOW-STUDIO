@@ -11,6 +11,7 @@ export default function RapperNetwork({ setIsDawOpen }: { setIsDawOpen?: any }) 
   // 🔥 THE GLOBAL DIRECTORY STATES 🔥
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState(""); // 🔥 Search feature
   
   // 🔥 PORTFOLIO & CHAT STATES 🔥
   const [userPortfolio, setUserPortfolio] = useState<any[]>([]);
@@ -45,7 +46,7 @@ export default function RapperNetwork({ setIsDawOpen }: { setIsDawOpen?: any }) 
     socket.emit('join_room', safeUserId);
     
     socket.on('receive_message', (data) => {
-      // 🔥 PURE 1-ON-1 LOGIC: Agar message mere selected user se aaya hai, tabhi screen pe dikhao!
+      // PURE 1-ON-1 LOGIC
       if (String(data.senderId) === String(selectedUserRef.current?._id) || String(data.receiverId) === String(selectedUserRef.current?._id)) {
         setChatMessages((prev) => [...prev, data]);
       }
@@ -60,7 +61,7 @@ export default function RapperNetwork({ setIsDawOpen }: { setIsDawOpen?: any }) 
       try {
         const token = currentUser.token;
         
-        // A) Fetch 1-on-1 Chat History (New Route)
+        // A) Fetch 1-on-1 Chat History
         const chatRes = await axios.get(`http://localhost:5000/api/chat/direct/${selectedUser._id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -81,13 +82,13 @@ export default function RapperNetwork({ setIsDawOpen }: { setIsDawOpen?: any }) 
 
   const togglePlay = (trackId: string) => { setPlayingTrackId(playingTrackId === trackId ? null : trackId); };
 
-  // 🔥 SEND DIRECT MESSAGE (INSTAGRAM STYLE) 🔥
+  // 🔥 SEND DIRECT MESSAGE 🔥
   const handleSendMessage = async () => {
     if(!replyText.trim() || !selectedUser) return;
     
     const messagePayload = {
         senderId: safeUserId,
-        receiverId: selectedUser._id, // Target the User directly!
+        receiverId: selectedUser._id, 
         text: replyText,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
@@ -95,13 +96,9 @@ export default function RapperNetwork({ setIsDawOpen }: { setIsDawOpen?: any }) 
     const currentReply = replyText;
     setReplyText(""); 
 
-    // Local UI update instantly
     setChatMessages(prev => [...prev, { ...messagePayload, id: Date.now().toString() }]);
-
-    // Blast it through sockets
     socket.emit('send_message', messagePayload);
     
-    // Save to DB
     try {
       await axios.post('http://localhost:5000/api/chat/send', messagePayload, {
          headers: { Authorization: `Bearer ${currentUser.token}` } 
@@ -109,8 +106,15 @@ export default function RapperNetwork({ setIsDawOpen }: { setIsDawOpen?: any }) 
     } catch (err) { setReplyText(currentReply); }
   };
 
+  // 🔥 SEARCH FILTER LOGIC 🔥
+  const filteredUsers = allUsers.filter(u => 
+    u.username?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    u.role?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div className="h-[75vh] bg-[#0a0a0a] border border-white/5 rounded-[3rem] flex overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] relative">
+    // 🔥 Perfect height and width for dashboard, no weird double scrolls on the window
+    <div className="h-[82vh] max-h-[850px] w-full max-w-[1500px] mx-auto mt-6 bg-[#0a0a0a] border border-white/5 rounded-[3rem] flex overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] relative">
       
       {/* LEFT PANE: THE GLOBAL DIRECTORY */}
       <div className="w-80 border-r border-white/5 bg-[#050505]/90 flex flex-col z-10 backdrop-blur-xl">
@@ -120,11 +124,22 @@ export default function RapperNetwork({ setIsDawOpen }: { setIsDawOpen?: any }) 
         </div>
         
         <div className="p-4 border-b border-white/5 bg-[#0a0a0a]">
-            <input type="text" placeholder="Search artists..." className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-2 text-xs text-white outline-none focus:border-purple-500 transition-all" />
+            <input 
+              type="text" 
+              placeholder="Search artists..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-2 text-xs text-white outline-none focus:border-purple-500 transition-all" 
+            />
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
-            {allUsers.map((u: any) => (
+        {/* 🔥 Scroll hijack fix (Lenis allow) */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar" data-lenis-prevent="true">
+            {filteredUsers.length === 0 ? (
+                <div className="text-center text-xs text-neutral-600 mt-10 font-mono">No artists found.</div>
+            ) : null}
+            
+            {filteredUsers.map((u: any) => (
               <div key={u._id} onClick={() => { setSelectedUser(u); setChatMessages([]); setPlayingTrackId(null); }} className={`flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all ${selectedUser?._id === u._id ? 'bg-purple-600/20 border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.1)]' : 'hover:bg-white/5 border border-transparent'}`}>
                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${u._id}`} className="w-12 h-12 rounded-full bg-white/5" alt="dp"/>
                 <div className="flex-1 overflow-hidden">
@@ -150,7 +165,9 @@ export default function RapperNetwork({ setIsDawOpen }: { setIsDawOpen?: any }) 
                     </div>
 
                     <p className="text-[10px] uppercase text-purple-500 font-black mb-4">Public Uploads</p>
-                    <div className="space-y-2 overflow-y-auto pr-2 custom-scrollbar flex-1">
+                    
+                    {/* 🔥 Scroll hijack fix (Lenis allow) */}
+                    <div className="space-y-2 overflow-y-auto pr-2 custom-scrollbar flex-1" data-lenis-prevent="true">
                         {userPortfolio.length > 0 ? userPortfolio.map(track => (
                             <div key={track._id} className="flex justify-between bg-white/5 p-3 rounded-xl items-center border border-white/5 hover:border-purple-500/30 transition-all">
                                 <div className="overflow-hidden pr-2">
@@ -180,7 +197,8 @@ export default function RapperNetwork({ setIsDawOpen }: { setIsDawOpen?: any }) 
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-8 flex flex-col gap-4 custom-scrollbar">
+                    {/* 🔥 Scroll hijack fix (Lenis allow) */}
+                    <div className="flex-1 overflow-y-auto p-8 flex flex-col gap-4 custom-scrollbar" data-lenis-prevent="true">
                         {chatMessages.length === 0 ? (
                           <div className="flex-1 flex flex-col items-center justify-center opacity-40">
                               <span className="text-4xl mb-4">💬</span>
@@ -203,8 +221,17 @@ export default function RapperNetwork({ setIsDawOpen }: { setIsDawOpen?: any }) 
                     </div>
                     
                     <div className="p-4 bg-[#050505]/90 border-t border-white/5 flex gap-4 backdrop-blur-md">
-                       <input type="text" placeholder={`Message ${selectedUser.username}...`} value={replyText} onChange={(e) => setReplyText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} className="flex-1 bg-white/5 rounded-full px-6 text-sm text-white outline-none focus:border-purple-500 border border-transparent transition-all" />
-                       <button onClick={handleSendMessage} className="w-12 h-12 bg-purple-600 rounded-full text-white hover:bg-purple-500 shadow-[0_0_15px_rgba(147,51,234,0.4)] transition-all active:scale-95 flex items-center justify-center text-lg">↑</button>
+                       <input 
+                         type="text" 
+                         placeholder={`Message ${selectedUser.username}...`} 
+                         value={replyText} 
+                         onChange={(e) => setReplyText(e.target.value)} 
+                         onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()} 
+                         className="flex-1 bg-white/5 rounded-full px-6 text-sm text-white outline-none focus:border-purple-500 border border-transparent transition-all" 
+                       />
+                       <button onClick={handleSendMessage} className="w-12 h-12 bg-purple-600 rounded-full text-white hover:bg-purple-500 shadow-[0_0_15px_rgba(147,51,234,0.4)] transition-all active:scale-95 flex items-center justify-center text-lg">
+                          ↑
+                       </button>
                     </div>
                 </div>
             </div>

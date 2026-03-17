@@ -11,6 +11,7 @@ export default function LyricistHub() {
   // 🔥 THE GLOBAL DIRECTORY STATES 🔥
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState(""); // 🔥 FIX 1: Search state
   
   // 🔥 PORTFOLIO & CHAT STATES 🔥
   const [userPortfolio, setUserPortfolio] = useState<any[]>([]);
@@ -46,7 +47,7 @@ export default function LyricistHub() {
     socket.emit('join_room', safeUserId);
     
     socket.on('receive_message', (data) => {
-      // 🔥 PURE 1-ON-1 LOGIC
+      // PURE 1-ON-1 LOGIC
       if (String(data.senderId) === String(selectedUserRef.current?._id) || String(data.receiverId) === String(selectedUserRef.current?._id)) {
         setChatMessages((prev) => [...prev, data]);
       }
@@ -85,10 +86,8 @@ export default function LyricistHub() {
   // 🔥 THE AI GHOSTWRITER ENGINE 🔥
   const triggerAIGhostwriter = () => {
       setIsAiLoading(true);
-      // Fake delay to simulate AI thinking (Backend judne ke baad asli AI aayega)
       setTimeout(() => {
          const aiBars = "We breakin' the mold, no chains on my soul,\nGot the Midas touch, turn the dust into gold.";
-         // AI ke bars seedha input box mein daal do!
          setReplyText(prev => prev + (prev ? "\n" : "") + aiBars);
          setIsAiLoading(false);
       }, 1500);
@@ -108,13 +107,9 @@ export default function LyricistHub() {
     const currentReply = replyText;
     setReplyText(""); 
 
-    // Local UI update instantly
     setChatMessages(prev => [...prev, { ...messagePayload, id: Date.now().toString() }]);
-
-    // Blast it through sockets
     socket.emit('send_message', messagePayload);
     
-    // Save to DB
     try {
       await axios.post('http://localhost:5000/api/chat/send', messagePayload, {
          headers: { Authorization: `Bearer ${currentUser.token}` } 
@@ -122,8 +117,15 @@ export default function LyricistHub() {
     } catch (err) { setReplyText(currentReply); }
   };
 
+  // 🔥 SEARCH FILTER LOGIC 🔥
+  const filteredUsers = allUsers.filter(u => 
+    u.username?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    u.role?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div className="h-[75vh] bg-[#0a0a0a] border border-white/5 rounded-[3rem] flex overflow-hidden shadow-[0_0_80px_rgba(16,185,129,0.15)] relative">
+    // 🔥 Sized perfectly to avoid double window scroll
+    <div className="h-[82vh] max-h-[850px] w-full max-w-[1500px] mx-auto mt-6 bg-[#0a0a0a] border border-white/5 rounded-[3rem] flex overflow-hidden shadow-[0_0_80px_rgba(16,185,129,0.15)] relative">
       
       {/* LEFT PANE: THE GLOBAL DIRECTORY */}
       <div className="w-80 border-r border-white/5 bg-[#050505]/90 flex flex-col z-10 backdrop-blur-xl">
@@ -133,11 +135,22 @@ export default function LyricistHub() {
         </div>
         
         <div className="p-4 border-b border-white/5 bg-[#0a0a0a]">
-            <input type="text" placeholder="Search artists..." className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-2 text-xs text-white outline-none focus:border-emerald-500 transition-all" />
+            <input 
+              type="text" 
+              placeholder="Search artists..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 rounded-full px-4 py-2 text-xs text-white outline-none focus:border-emerald-500 transition-all" 
+            />
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar">
-            {allUsers.map((u: any) => (
+        {/* 🔥 FIX 2: data-lenis-prevent="true" for safe scrolling */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-2 custom-scrollbar" data-lenis-prevent="true">
+            {filteredUsers.length === 0 ? (
+                <div className="text-center text-xs text-neutral-600 mt-10 font-mono">No artists found.</div>
+            ) : null}
+
+            {filteredUsers.map((u: any) => (
               <div key={u._id} onClick={() => { setSelectedUser(u); setChatMessages([]); setPlayingTrackId(null); }} className={`flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all ${selectedUser?._id === u._id ? 'bg-emerald-600/20 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'hover:bg-white/5 border border-transparent'}`}>
                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${u._id}`} className="w-12 h-12 rounded-full bg-white/5" alt="dp"/>
                 <div className="flex-1 overflow-hidden">
@@ -163,7 +176,9 @@ export default function LyricistHub() {
                     </div>
 
                     <p className="text-[10px] uppercase text-emerald-500 font-black mb-4">Public Uploads</p>
-                    <div className="space-y-2 overflow-y-auto pr-2 custom-scrollbar flex-1">
+                    
+                    {/* 🔥 FIX 2: data-lenis-prevent="true" */}
+                    <div className="space-y-2 overflow-y-auto pr-2 custom-scrollbar flex-1" data-lenis-prevent="true">
                         {userPortfolio.length > 0 ? userPortfolio.map(track => (
                             <div key={track._id} className="flex justify-between bg-white/5 p-3 rounded-xl items-center border border-white/5 hover:border-emerald-500/30 transition-all">
                                 <div className="overflow-hidden pr-2">
@@ -193,7 +208,8 @@ export default function LyricistHub() {
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-8 flex flex-col gap-4 custom-scrollbar">
+                    {/* 🔥 FIX 2: data-lenis-prevent="true" */}
+                    <div className="flex-1 overflow-y-auto p-8 flex flex-col gap-4 custom-scrollbar" data-lenis-prevent="true">
                         {chatMessages.length === 0 ? (
                           <div className="flex-1 flex flex-col items-center justify-center opacity-40">
                               <span className="text-4xl mb-4">💬</span>
@@ -205,7 +221,6 @@ export default function LyricistHub() {
                             return (
                               <div key={i} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`max-w-[70%] p-3 px-5 rounded-2xl ${isMe ? 'bg-emerald-600 text-white rounded-tr-sm shadow-[0_0_15px_rgba(16,185,129,0.3)]' : 'bg-[#1a1a1a] border border-white/5 text-white rounded-tl-sm shadow-md'}`}>
-                                  {/* whitespace-pre-wrap ensures multi-line lyrics format correctly */}
                                   <p className="text-sm font-light leading-relaxed whitespace-pre-wrap">{msg.text}</p>
                                   <p className={`text-[8px] mt-1 text-right tracking-widest font-bold opacity-70`}>{msg.timestamp}</p>
                                 </div>
@@ -218,7 +233,6 @@ export default function LyricistHub() {
                     
                     {/* 🔥 CHAT INPUT WITH AI BUTTON 🔥 */}
                     <div className="p-4 bg-[#050505]/90 border-t border-white/5 flex flex-col gap-3 backdrop-blur-md">
-                       {/* AI Spark Button Row */}
                        <div className="flex justify-start">
                            <button 
                                 onClick={triggerAIGhostwriter} 
@@ -229,7 +243,6 @@ export default function LyricistHub() {
                            </button>
                        </div>
                        
-                       {/* Input Row */}
                        <div className="flex gap-4 items-end">
                            <textarea 
                              placeholder={`Message ${selectedUser.username}...`} 

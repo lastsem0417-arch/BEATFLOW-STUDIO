@@ -27,7 +27,8 @@ export default function ProducerMaster() {
   }, [navigate]);
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-[#050505] text-[#ebebe6] flex font-sans overflow-hidden relative">
+    // 🔥 FIX 1: overflow-hidden hataya aur min-h-screen rakha
+    <div ref={containerRef} className="min-h-screen bg-[#050505] text-[#ebebe6] flex font-sans relative">
       
       {/* 🔥 TERA DRAGGABLE WEBCAM YAHAN HAI 🔥 */}
       <DraggableWebcam />
@@ -35,7 +36,8 @@ export default function ProducerMaster() {
       {showDropModal && <CreateDropModal onClose={() => setShowDropModal(false)} onSuccess={() => setShowDropModal(false)} />}
 
       {/* --- SIDEBAR --- */}
-      <aside className="w-24 border-r border-white/5 bg-[#080808]/80 backdrop-blur-xl flex flex-col items-center py-10 z-50 shadow-[0_0_30px_rgba(0,0,0,0.8)]">
+      {/* 🔥 FIX 2: sticky top-0 h-screen add kiya */}
+      <aside className="w-24 sticky top-0 h-screen border-r border-white/5 bg-[#080808]/80 backdrop-blur-xl flex flex-col items-center py-10 z-50 shadow-[0_0_30px_rgba(0,0,0,0.8)]">
         <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.4)]">
            <span className="font-black text-xs italic text-white tracking-wider">BF</span>
         </div>
@@ -65,7 +67,8 @@ export default function ProducerMaster() {
       </aside>
 
       {/* --- MAIN CONTENT AREA --- */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+      {/* 🔥 FIX 3: h-screen overflow-hidden hataya aur min-h-screen add kiya */}
+      <div className="flex-1 flex flex-col relative min-h-screen">
         <header className="h-24 px-12 sticky top-0 bg-[#050505]/80 border-b border-white/5 flex items-center justify-between z-40 backdrop-blur-2xl">
            <div className="flex flex-col animate-in fade-in slide-in-from-left-4 duration-500">
               <span className="text-[9px] uppercase tracking-[0.6em] text-blue-500 font-black italic">Studio Console</span>
@@ -85,8 +88,8 @@ export default function ProducerMaster() {
            </div>
         </header>
 
-        {/* 🔥 pb-32 ADDED FOR BOTTOM AUDIO PLAYER 🔥 */}
-        <main className="flex-1 w-full relative z-10 overflow-y-auto custom-scrollbar pb-32">
+        {/* 🔥 FIX 4: overflow-y-auto custom-scrollbar hataya, pb-32 retained */}
+        <main className="flex-1 w-full relative z-20 pb-32">
            {activeView === 'dashboard' && (
              <div className="p-8 lg:p-12 flex flex-col gap-12 max-w-[1600px] mx-auto w-full animate-in fade-in zoom-in-95 duration-700">
                <AnalyticsHeader />
@@ -100,8 +103,9 @@ export default function ProducerMaster() {
              </div>
            )}
 
-           {activeView === 'network' && <div className="h-full w-full animate-in fade-in duration-500"><GlobalFeed /></div>}
-           {activeView === 'chat' && <div className="h-full w-full animate-in fade-in duration-500"><LiveNetwork /></div>}
+           {/* 🔥 FIX 5: h-full hataya */}
+           {activeView === 'network' && <div className="w-full animate-in fade-in duration-500"><GlobalFeed /></div>}
+           {activeView === 'chat' && <div className="w-full animate-in fade-in duration-500"><LiveNetwork /></div>}
         </main>
       </div>
     </div>

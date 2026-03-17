@@ -3,6 +3,22 @@ const router = express.Router();
 const Track = require('../models/Track');
 const upload = require('../config/cloudinary');
 
+// 🔥 0. GET ALL TRACKS (Landing Page ke liye naya route!) 🔥
+router.get('/all', async (req, res) => {
+  try {
+    console.log("🌍 Fetching ALL global tracks for Landing Page...");
+    
+    // Latest 10 tracks uthayega, naye wale sabse upar
+    const tracks = await Track.find().sort({ createdAt: -1 }).limit(10); 
+    
+    console.log(`✨ Found ${tracks.length} global tracks.`);
+    res.status(200).json(tracks);
+  } catch (err) {
+    console.error("❌ Global Tracks Fetch Error:", err.message);
+    res.status(500).json({ message: "Error fetching global tracks" });
+  }
+});
+
 // 1. UPLOAD TRACK (Vocals or Beats)
 // Multer Cloudinary ke saath file handle karega aur MongoDB details save karega
 router.post('/upload', upload.single('audio'), async (req, res) => {
