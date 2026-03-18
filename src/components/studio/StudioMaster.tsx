@@ -190,10 +190,8 @@ export default function StudioMaster() {
 
     alert("Mixing down your session... Please wait.");
     
-    // 1. Create Offline Context
     const offlineCtx = new OfflineAudioContext(2, 44100 * duration, 44100);
 
-    // 2. Load all tracks into the offline context
     for (const track of tracks) {
       if (!track.audioUrl || track.isMuted) continue;
 
@@ -310,7 +308,6 @@ export default function StudioMaster() {
     if (isRecording) { stopEngine(); } 
     else {
       try {
-        // 🔥 MIC LAG FIX: Noise cancelling band kar di taaki CPU use na ho 🔥
         const stream = await navigator.mediaDevices.getUserMedia({ 
             audio: {
                 echoCancellation: false,
@@ -393,42 +390,78 @@ export default function StudioMaster() {
 
   const updateTrack = (id: string, key: string, value: any) => setTracks(tracks.map(t => t.id === id ? { ...t, [key]: value } : t));
   const addTrack = () => setTracks([...tracks, { id: `track_${Date.now()}`, title: `New Track`, type: 'vocal', audioUrl: null, startTime: 0, trimStart: 0, duration: 0, isProcessing: false, volume: 0.8, isMuted: false, isSolo: false, preset: 'clean' }]);
-  
-  // 🔥 TRACK DELETE FUNCTION 🔥
   const deleteTrack = (trackIdToDelete: string) => setTracks(tracks.filter(t => t.id !== trackIdToDelete));
-  
   const loadTrackFromLibrary = (url: string, title: string, type: string) => setTracks(tracks.map(t => t.id === activeTrackId ? { ...t, audioUrl: url, title: title, type: type, startTime: 0, trimStart: 0, duration: 20 } : t));
   const applyPreset = (presetId: string) => setTracks(tracks.map(t => t.id === activeTrackId ? { ...t, preset: presetId } : t));
 
   return (
-    <div className="h-screen w-full bg-[#050505] text-[#EBEBE6] flex flex-col font-sans overflow-hidden relative">
+    // 🔥 HIGH-END DARK STUDIO WRAPPER 🔥
+    <div className="h-screen w-full bg-[#030305] text-[#F0F0EB] flex flex-col font-sans overflow-hidden relative select-none">
       
+      {/* Subtle Studio Noise Overlay */}
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-[0.02] mix-blend-screen pointer-events-none z-0"></div>
+
       <DraggableWebcam />
       <LyricPad />
 
+      {/* 👑 PREMIUM PRODUCER FEEDBACK PANEL (Studio Terms) */}
       {producerNotes && (
-        <div className="absolute top-24 right-10 z-[100] w-72 animate-in slide-in-from-right duration-700">
-            <div className="bg-blue-600/10 border border-blue-500/30 backdrop-blur-2xl p-4 rounded-2xl shadow-2xl">
-                <div className="flex items-center gap-2 mb-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
-                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-blue-400">Producer Feedback</span>
+        <div className="absolute top-24 right-10 z-[100] w-80 animate-in slide-in-from-right duration-700">
+            <div className="bg-[#D4AF37]/5 border border-[#D4AF37]/30 backdrop-blur-3xl p-6 rounded-[1.5rem] shadow-[0_20px_50px_rgba(212,175,55,0.15)] relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/10 blur-[40px] rounded-full pointer-events-none"></div>
+                <div className="flex items-center gap-3 mb-4 relative z-10">
+                    <div className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse shadow-[0_0_10px_#D4AF37]"></div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#D4AF37]">Producer Notes</span>
                 </div>
-                <p className="text-[11px] text-white/90 font-light italic leading-relaxed">"{producerNotes}"</p>
-                <button onClick={() => setProducerNotes("")} className="mt-3 text-[8px] uppercase tracking-widest text-neutral-500 hover:text-white transition-colors">Dismiss</button>
+                <p className="text-[13px] text-[#F0F0EB] font-serif italic leading-relaxed relative z-10 border-l-2 border-[#D4AF37]/50 pl-4">"{producerNotes}"</p>
+                <button onClick={() => setProducerNotes("")} className="mt-5 text-[9px] font-mono uppercase tracking-[0.2em] text-[#888888] hover:text-[#F0F0EB] transition-colors relative z-10 border-b border-transparent hover:border-[#888888] pb-0.5">Dismiss Notes</button>
             </div>
         </div>
       )}
 
+      {/* 🎬 CINEMATIC SAVE/NEW MODAL (Studio Terms) */}
       {modalConfig.isOpen && (
-        <div className="absolute inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center">
-          <div className="bg-[#111] border border-white/10 p-8 rounded-2xl shadow-2xl w-96 flex flex-col gap-6">
-             <h2 className="text-xl font-serif italic text-white">{modalConfig.type === 'save' ? 'Save Project' : 'Start New Project?'}</h2>
+        <div className="absolute inset-0 z-[9999] bg-[#030305]/80 backdrop-blur-xl flex items-center justify-center animate-in fade-in duration-300">
+          <div className="bg-[#0A0A0C]/95 border border-white/10 p-10 rounded-[2rem] shadow-[0_30px_60px_rgba(0,0,0,0.8)] w-[450px] flex flex-col gap-6 relative overflow-hidden">
+             
+             {/* Glow */}
+             <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 blur-[60px] rounded-full pointer-events-none ${modalConfig.type === 'save' ? 'bg-[#D4AF37]/10' : 'bg-[#E63946]/10'}`}></div>
+             
+             <h2 className="text-3xl font-serif italic text-[#F0F0EB] relative z-10">
+               {modalConfig.type === 'save' ? 'Save Studio Project' : 'New Studio Session?'}
+             </h2>
+             
              {modalConfig.type === 'save' ? (
-               <input type="text" value={tempProjectName} onChange={(e) => setTempProjectName(e.target.value)} autoFocus className="bg-[#222] border border-white/10 p-3 rounded text-white outline-none focus:border-green-500" placeholder="Name your masterpiece..." />
-             ) : (<p className="text-xs text-neutral-400">Any unsaved changes will be lost.</p>)}
-             <div className="flex justify-end gap-3 mt-4">
-                <button onClick={() => setModalConfig({ isOpen: false, type: 'save' })} className="px-4 py-2 text-neutral-400 hover:text-white text-xs uppercase tracking-widest font-bold">Cancel</button>
-                <button onClick={handleModalAction} className={`px-6 py-2 text-white rounded text-xs uppercase tracking-widest font-bold ${modalConfig.type === 'save' ? 'bg-green-600' : 'bg-red-600'}`}>{modalConfig.type === 'save' ? 'Save' : 'Confirm'}</button>
+               <div className="relative z-10">
+                 <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-[#888888] mb-3">Project Name</p>
+                 <input 
+                   type="text" 
+                   value={tempProjectName} 
+                   onChange={(e) => setTempProjectName(e.target.value)} 
+                   autoFocus 
+                   className="w-full bg-[#010101] border border-white/10 p-4 rounded-xl text-[#F0F0EB] outline-none focus:border-[#D4AF37] transition-all font-mono text-sm placeholder:text-[#888888]/50" 
+                   placeholder="Name your track..." 
+                 />
+               </div>
+             ) : (
+               <p className="text-sm text-[#888888] font-light leading-relaxed relative z-10">
+                 Starting a new studio session will clear all unsaved vocal takes and beat layers. Are you sure?
+               </p>
+             )}
+             
+             <div className="flex justify-end gap-4 mt-6 relative z-10">
+                <button 
+                  onClick={() => setModalConfig({ isOpen: false, type: 'save' })} 
+                  className="px-6 py-3 text-[#888888] hover:text-[#F0F0EB] text-[10px] uppercase tracking-[0.3em] font-black transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleModalAction} 
+                  className={`px-8 py-3 text-[#010101] rounded-full text-[10px] uppercase tracking-[0.3em] font-black shadow-lg hover:scale-105 active:scale-95 transition-all ${modalConfig.type === 'save' ? 'bg-[#F0F0EB] hover:bg-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.2)]' : 'bg-[#E63946] text-white shadow-[0_0_20px_rgba(230,57,70,0.3)]'}`}
+                >
+                  {modalConfig.type === 'save' ? 'Save Project' : 'Clear Studio'}
+                </button>
              </div>
           </div>
         </div>
@@ -438,6 +471,7 @@ export default function StudioMaster() {
         <audio key={track.id} ref={el => { if(el) audioRefs.current[track.id] = el }} src={track.audioUrl} crossOrigin="anonymous" onLoadedMetadata={(e:any) => { if(track.duration === 0 || track.duration === 20) updateTrack(track.id, 'duration', e.target.duration); }} />
       ))}
 
+      {/* 🔥 CHILD COMPONENTS 🔥 */}
       <TopTransportBar 
         isPlaying={isPlaying} isRecording={isRecording} togglePlay={togglePlay} stopEngine={stopEngine} toggleRecord={toggleRecord} 
         onSaveProject={() => { setTempProjectName(currentProjectName); setModalConfig({ isOpen: true, type: 'save' }); }} 
@@ -446,14 +480,16 @@ export default function StudioMaster() {
         timeDisplayRef={timeDisplayRef} projectName={currentProjectName} 
       />
 
-      {/* 🔥 PASSING onDeleteTrack down to TimelineGrid 🔥 */}
       <TimelineGrid 
         duration={duration} pixelsPerSecond={pixelsPerSecond} playheadRef={playheadRef} liveRecordBlockRef={liveRecordBlockRef}
         onScrub={handleScrub} tracks={tracks} activeTrackId={activeTrackId} setActiveTrackId={setActiveTrackId} isRecording={isRecording} pausedTimeRef={pausedTimeRef}
         onUpdateBlock={handleBlockUpdate} updateTrack={updateTrack} onAddTrack={addTrack} onDeleteTrack={deleteTrack}
       />
 
-      <DAWBottomPanel tracks={tracks} activeTrackId={activeTrackId} beats={libraryBeats} vault={vaultTracks} projects={savedProjects} onLoadTrack={loadTrackFromLibrary} onLoadProject={loadProject} onApplyPreset={applyPreset} />
+      <DAWBottomPanel 
+        tracks={tracks} activeTrackId={activeTrackId} beats={libraryBeats} vault={vaultTracks} projects={savedProjects} 
+        onLoadTrack={loadTrackFromLibrary} onLoadProject={loadProject} onApplyPreset={applyPreset} 
+      />
     </div>
   );
 }

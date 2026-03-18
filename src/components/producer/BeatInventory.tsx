@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-// 🔥 AUDIO CONTEXT IMPORT KIYA
 import { useAudio } from '../../context/AudioContext'; 
 
 export default function BeatInventory({ refreshTrigger }: { refreshTrigger: number }) {
   const [beats, setBeats] = useState<any[]>([]);
   const user = JSON.parse(sessionStorage.getItem('beatflow_user') || '{}');
   
-  // 🔥 AUDIO ACTIONS NIKALE
   const { playTrack, currentTrack, isPlaying, togglePlayPause } = useAudio();
 
   useEffect(() => {
@@ -20,7 +18,6 @@ export default function BeatInventory({ refreshTrigger }: { refreshTrigger: numb
     fetchBeats();
   }, [refreshTrigger, user.id, user._id]);
 
-  // 🔥 PLAY HANDLER: Jo global player ko data bhejega
   const handlePreview = (beat: any) => {
     if (currentTrack?._id === beat._id) {
       togglePlayPause();
@@ -28,8 +25,8 @@ export default function BeatInventory({ refreshTrigger }: { refreshTrigger: numb
       playTrack({
         _id: beat._id,
         title: beat.title,
-        contentUrl: beat.audioUrl || beat.contentUrl, // Jo bhi field tera audio store kar rahi hai
-        creatorName: user.username || 'Producer',
+        contentUrl: beat.audioUrl || beat.contentUrl, 
+        creatorName: user.username || 'Architect',
         creatorRole: 'producer',
         creatorId: user.id || user._id
       });
@@ -37,25 +34,28 @@ export default function BeatInventory({ refreshTrigger }: { refreshTrigger: numb
   };
 
   return (
-    <div className="bg-[#080808] border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
-      <div className="p-8 border-b border-white/5 flex justify-between items-center bg-white/[0.01]">
-        <h3 className="text-xs uppercase tracking-[0.3em] font-black text-white/80">
-          Beat Inventory <span className="text-blue-500 ml-2">[{beats.length}]</span>
+    <div className="bg-brand-dark border border-white/5 rounded-[2rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative">
+      
+      {/* 🎩 PREMIUM INVENTORY HEADER */}
+      <div className="p-8 border-b border-white/5 flex justify-between items-center bg-[#010101]">
+        <h3 className="text-xs uppercase tracking-[0.4em] font-black text-brand-pearl">
+          Vault Assets <span className="text-producer font-serif italic text-lg ml-2">[{beats.length}]</span>
         </h3>
         <div className="flex gap-4">
-            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/5 border border-blue-500/10 text-[9px] uppercase tracking-widest text-blue-400 font-bold">
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
-                Cloud Sync Active
+            <div className="flex items-center gap-3 px-5 py-2 rounded-full bg-producer/5 border border-producer/20 text-[9px] uppercase tracking-widest text-producer font-bold shadow-inner">
+                <div className="w-1.5 h-1.5 rounded-full bg-producer shadow-[0_0_10px_#D4AF37] animate-pulse"></div>
+                Encrypted Sync
             </div>
         </div>
       </div>
       
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+      {/* 🗂️ THE ASSET TABLE */}
+      <div className="overflow-x-auto custom-scrollbar">
+        <table className="w-full text-left border-collapse whitespace-nowrap">
           <thead>
-            <tr className="border-b border-white/5 bg-white/[0.02]">
-              {['Asset Name', 'Created', 'Type', 'Status', 'Control'].map(h => (
-                <th key={h} className="px-8 py-4 text-[9px] uppercase tracking-widest text-neutral-500 font-black">{h}</th>
+            <tr className="border-b border-white/5 bg-white/[0.01]">
+              {['Asset Name', 'Created', 'Format', 'Status', 'Control'].map(h => (
+                <th key={h} className="px-8 py-5 text-[9px] uppercase tracking-[0.3em] text-brand-muted font-black">{h}</th>
               ))}
             </tr>
           </thead>
@@ -64,40 +64,53 @@ export default function BeatInventory({ refreshTrigger }: { refreshTrigger: numb
               const isThisPlaying = currentTrack?._id === beat._id;
               
               return (
-                <tr key={idx} className={`group hover:bg-white/[0.03] transition-all border-b border-white/5 last:border-0 ${isThisPlaying ? 'bg-blue-500/[0.03]' : ''}`}>
+                <tr 
+                  key={idx} 
+                  className={`group transition-all duration-500 border-b border-white/5 last:border-0 relative ${isThisPlaying ? 'bg-producer/5' : 'hover:bg-white/[0.02]'}`}
+                >
+                  {/* ACTIVE TRACK LEFT BORDER INDICATOR */}
+                  {isThisPlaying && <td className="absolute left-0 top-0 bottom-0 w-1 bg-producer shadow-[0_0_15px_#D4AF37]"></td>}
+
                   <td className="px-8 py-6">
-                     <div className="flex items-center gap-4">
-                        {/* 🔥 PLAY/PREVIEW ICON */}
+                     <div className="flex items-center gap-5">
+                        
+                        {/* ⏯️ SLEEK PLAY BUTTON */}
                         <div 
                           onClick={() => handlePreview(beat)}
-                          className={`w-10 h-10 rounded-xl cursor-pointer flex items-center justify-center transition-all duration-300 ${isThisPlaying ? 'bg-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.5)] scale-105' : 'bg-blue-500/10 border border-blue-500/20 group-hover:bg-blue-500 group-hover:text-white'}`}
+                          className={`w-12 h-12 rounded-xl cursor-pointer flex items-center justify-center transition-all duration-500 ${isThisPlaying ? 'bg-producer text-black shadow-[0_0_20px_rgba(212,175,55,0.4)] scale-105' : 'bg-[#010101] text-brand-pearl border border-white/10 group-hover:border-producer group-hover:text-producer'}`}
                         >
                            {isThisPlaying && isPlaying ? (
-                             <span className="text-xs">⏸</span>
+                             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
                            ) : (
-                             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="ml-1"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                            )}
                         </div>
                         
                         <div className="flex flex-col">
-                          <span className={`text-[13px] font-bold transition-colors ${isThisPlaying ? 'text-blue-400' : 'text-white/90'}`}>
+                          <span className={`text-[14px] font-sans font-light tracking-wide transition-colors duration-500 ${isThisPlaying ? 'text-producer font-bold' : 'text-brand-pearl group-hover:text-white'}`}>
                             {beat.title}
                           </span>
-                          <span className="text-[8px] text-neutral-600 uppercase tracking-widest mt-1 font-mono">ID: {beat._id.slice(-6)}</span>
+                          <span className="text-[9px] text-brand-muted uppercase tracking-[0.2em] mt-1 font-mono group-hover:text-producer/70 transition-colors">
+                            ID: {beat._id.slice(-6)}
+                          </span>
                         </div>
                      </div>
                   </td>
-                  <td className="px-8 py-6 text-[10px] font-mono text-neutral-500">{new Date(beat.createdAt).toLocaleDateString()}</td>
-                  <td className="px-8 py-6 text-[10px] font-mono text-blue-400 uppercase tracking-widest">{beat.trackType}</td>
+                  
+                  <td className="px-8 py-6 text-[10px] font-mono text-brand-muted">{new Date(beat.createdAt).toLocaleDateString()}</td>
+                  
+                  <td className="px-8 py-6 text-[9px] font-mono text-producer uppercase tracking-[0.3em]">{beat.trackType}</td>
+                  
                   <td className="px-8 py-6">
-                     <span className={`text-[8px] font-black uppercase tracking-widest px-3 py-1 rounded-full border transition-all ${isThisPlaying && isPlaying ? 'bg-blue-500/20 text-blue-400 border-blue-500/30 animate-pulse' : 'bg-green-500/10 text-green-500 border-green-500/20'}`}>
-                       {isThisPlaying && isPlaying ? 'Transmitting' : 'Live'}
+                     <span className={`text-[8px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border transition-all duration-500 ${isThisPlaying && isPlaying ? 'bg-producer/10 text-producer border-producer/40 animate-pulse' : 'bg-white/5 text-brand-muted border-white/10'}`}>
+                       {isThisPlaying && isPlaying ? 'Transmitting' : 'Archived'}
                      </span>
                   </td>
+                  
                   <td className="px-8 py-6">
                      <div className="flex items-center gap-6">
-                        <button className="text-[10px] text-neutral-500 hover:text-red-500 uppercase tracking-widest transition-colors font-black">
-                          Delete
+                        <button className="text-[10px] font-mono text-brand-muted hover:text-red-500 uppercase tracking-[0.2em] transition-colors">
+                          Purge
                         </button>
                      </div>
                   </td>
@@ -107,8 +120,8 @@ export default function BeatInventory({ refreshTrigger }: { refreshTrigger: numb
             
             {beats.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-8 py-20 text-center text-neutral-600 uppercase tracking-widest text-[10px] font-mono italic">
-                  No audio assets detected in encrypted storage.
+                <td colSpan={5} className="px-8 py-24 text-center text-brand-muted uppercase tracking-[0.4em] text-[9px] font-mono bg-[#010101]/50">
+                  Vault is currently empty. Initialize a drop.
                 </td>
               </tr>
             )}

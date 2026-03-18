@@ -1,12 +1,22 @@
 @import "tailwindcss";
 
-* {
-  cursor: none !important;
+/* 🔥 TAILWIND V4 THEME CONFIGURATION 🔥 */
+@theme {
+  --color-brand-onyx: #030305;
+  --color-brand-dark: #0A0A0C;
+  --color-brand-pearl: #F0F0EB;
+  --color-brand-muted: #888888;
+
+  --color-producer: #D4AF37;
+  --color-rapper: #E63946;
+  --color-lyricist: #52B788;
+  --color-listener: #8ECAE6;
 }
+
 @layer base {
-  body {
-    background-color: #0c0c0c;
-    color: #ebebe6;
+  html, body {
+    background-color: var(--color-brand-onyx);
+    color: var(--color-brand-pearl);
     font-family: 'Helvetica Neue', Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -14,20 +24,23 @@
   }
 
   ::selection {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
+    background: var(--color-producer);
+    color: #000000;
   }
+
+  /* Lenis scrollbar fix */
+  ::-webkit-scrollbar { display: none; }
+  * { -ms-overflow-style: none; scrollbar-width: none; }
 }
 
-.noise-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;
-  z-index: 50;
-  opacity: 0.03;
-  background-image: url('https://upload.wikimedia.org/wikipedia/commons/7/76/1k_Dissolve_Noise_Texture.png');
-  mix-blend-mode: overlay;
+.custom-scrollbar::-webkit-scrollbar {
+  display: block;
+  width: 2px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.01);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-producer); /* Gold scrollbar */
+  border-radius: 10px;
 }

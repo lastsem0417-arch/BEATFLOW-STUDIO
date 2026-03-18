@@ -1,196 +1,170 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import gsap from "gsap";
 import AuthModal from "./AuthModal";
 import { useAuth } from "../context/AuthContext";
 
 const roles = [
-{
-id: "rapper",
-title: "RAPPER",
-image: "/images/rapper.jpg",
-gradient: "from-purple-900 via-black to-black",
-desc: "Vocal tracking. AI auto-mix. Beat discovery."
-},
-
-{
-id: "producer",
-title: "PRODUCER",
-image: "/images/producer.jpg",
-gradient: "from-emerald-900 via-black to-black",
-desc: "Upload beats. Stem management. Collab network."
-},
-
-{
-id: "lyricist",
-title: "LYRICIST",
-image: "/images/lyricist.jpg",
-gradient: "from-yellow-900 via-black to-black",
-desc: "Writing pads. Rhythm analysis. Vocal matching."
-},
-
-{
-id: "listener",
-title: "LISTENER",
-image: "/images/listener.jpg",
-gradient: "from-blue-900 via-black to-black",
-desc: "Discover tracks. Support artists. Vibe on the Global Feed."
-}
+  {
+    id: "producer",
+    title: "PRODUCER",
+    number: "01",
+    image: "/images/producer.jpg",
+    glow: "from-[#D4AF37]/50", // Champagne Gold Glow
+    textColor: "group-hover:text-[#D4AF37]",
+    desc: "The Architect. Upload beats, manage stems, and build the foundation."
+  },
+  {
+    id: "rapper",
+    title: "RAPPER",
+    number: "02",
+    image: "/images/rapper.jpg",
+    glow: "from-[#E63946]/50", // Carmine Red Glow
+    textColor: "group-hover:text-[#E63946]",
+    desc: "The Voice. Vocal tracking, AI auto-mix, and exclusive beat discovery."
+  },
+  {
+    id: "lyricist",
+    title: "LYRICIST",
+    number: "03",
+    image: "/images/lyricist.jpg",
+    glow: "from-[#52B788]/50", // Sage Green Glow
+    textColor: "group-hover:text-[#52B788]",
+    desc: "The Poet. Writing pads, rhythm analysis, and vocal matching."
+  },
+  {
+    id: "listener",
+    title: "LISTENER",
+    number: "04",
+    image: "/images/listener.jpg",
+    glow: "from-[#8ECAE6]/50", // Ice Blue Glow
+    textColor: "group-hover:text-[#8ECAE6]",
+    desc: "The Fan. Discover tracks, support artists, and vibe in 5D Zen."
+  }
 ];
 
 export default function RoleSelection() {
+  const containerRef = useRef(null);
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
-const containerRef = useRef(null);
-const navigate = useNavigate();
-const { login } = useAuth();
+  const [showAuth, setShowAuth] = useState(false);
+  const [selectedRole, setSelectedRole] = useState("");
+  const [hoveredRole, setHoveredRole] = useState<string | null>(null);
 
-const [showAuth,setShowAuth] = useState(false);
-const [selectedRole,setSelectedRole] = useState("");
+  useLayoutEffect(() => {
+    let ctx = gsap.context(() => {
+      // Clean elegant fade in for header
+      gsap.fromTo(".role-header",
+        { opacity: 0, y: -20 },
+        { opacity: 1, y: 0, duration: 1.5, ease: "power3.out" }
+      );
 
-useEffect(()=>{
+      // Smooth slide up for cards
+      gsap.fromTo(".role-card",
+        { y: 80, opacity: 0 },
+        { y: 0, opacity: 1, stagger: 0.15, duration: 1.5, ease: [0.76, 0, 0.24, 1], delay: 0.2 }
+      );
+    }, containerRef);
+    return () => ctx.revert();
+  }, []);
 
-let ctx = gsap.context(()=>{
+  const handleRoleClick = (roleTitle: string) => {
+    setSelectedRole(roleTitle);
+    setShowAuth(true);
+  };
 
-gsap.fromTo(
-".role-header",
-{opacity:0,y:-40,filter:"blur(10px)"},
-{opacity:1,y:0,filter:"blur(0px)",duration:1.4,ease:"power4.out"}
-);
+  const handleAuthSuccess = (data: any) => {
+    const userData = { ...(data.user || data), token: data.token };
+    login(userData);
+    setShowAuth(false);
+    
+    // Smooth Transition Out Before Navigating
+    gsap.to(containerRef.current, { opacity: 0, duration: 0.6, ease: "power2.inOut", onComplete: () => {
+      const roleStr = (userData.role || selectedRole).toLowerCase();
+      if (roleStr === "listener") navigate("/feed");
+      else navigate(`/studio/${roleStr}`);
+    }});
+  };
 
-gsap.fromTo(
-".role-card",
-{y:120,opacity:0},
-{y:0,opacity:1,stagger:0.15,duration:1.2,ease:"power4.out",delay:0.3}
-);
+  return (
+    <div ref={containerRef} className="min-h-screen w-full flex flex-col items-center justify-center bg-brand-onyx px-6 md:px-12 relative overflow-hidden select-none">
 
-},containerRef);
+      {/* Subtle Noise Texture */}
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10 mix-blend-screen pointer-events-none z-0"></div>
 
-return ()=> ctx.revert();
+      {showAuth && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xl">
+           <AuthModal role={selectedRole} onClose={() => setShowAuth(false)} onSuccess={handleAuthSuccess} />
+        </div>
+      )}
 
-},[]);
+      {/* 🎩 CLEAN HEADER (No massive cringe fonts) */}
+      <div className="relative z-10 w-full flex flex-col items-center mb-10 md:mb-16 mt-8 md:mt-0">
+         <p className="role-header font-mono text-[9px] md:text-[10px] tracking-[0.5em] text-brand-muted uppercase mb-4">
+           Ecosystem Initialization
+         </p>
+         <h2 className="role-header font-serif italic text-3xl md:text-5xl text-brand-pearl font-light tracking-wide text-center">
+           Choose Your Domain
+         </h2>
+      </div>
 
-const handleRoleClick=(roleTitle)=>{
+      {/* 🗂️ THE SLEEK MONOLITH ACCORDION */}
+      <div className="flex w-full max-w-[1400px] flex-col md:flex-row gap-3 md:gap-4 h-[75vh] md:h-[60vh] relative z-10">
+        
+        {roles.map((role) => (
+          <div
+            key={role.id}
+            onClick={() => handleRoleClick(role.title)}
+            onMouseEnter={() => setHoveredRole(role.title)}
+            onMouseLeave={() => setHoveredRole(null)}
+            className={`role-card group relative flex-1 cursor-pointer overflow-hidden rounded-2xl transition-all duration-[800ms] ease-[cubic-bezier(0.76,0,0.24,1)] ${hoveredRole === role.title ? 'md:flex-[1.8]' : hoveredRole ? 'md:flex-[0.8]' : ''} border border-white/5 hover:border-white/20 shadow-2xl bg-black`}
+          >
 
-setSelectedRole(roleTitle);
-setShowAuth(true);
+            {/* 📸 CINEMATIC IMAGE BACKGROUND */}
+            <img
+              src={role.image}
+              alt={role.title}
+              onError={(e) => { e.currentTarget.style.display = "none" }}
+              className="absolute inset-0 h-full w-full object-cover grayscale opacity-30 group-hover:grayscale-0 group-hover:opacity-70 group-hover:scale-105 transition-all duration-[1200ms]"
+            />
 
-};
+            {/* 🌑 DARK GRADIENT OVERLAY (Always readable) */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-[#030305] group-hover:via-black/20 transition-all duration-700" />
 
-const handleAuthSuccess=(data)=>{
+            {/* ✨ ROLE SPECIFIC PREMIUM GLOW (Reveals from bottom on hover) */}
+            <div className={`absolute bottom-0 left-0 w-full h-2/3 bg-gradient-to-t ${role.glow} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 mix-blend-screen`} />
 
-const userData = {
-...(data.user || data),
-token:data.token
-};
+            {/* 📝 CONTENT LAYER */}
+            <div className="absolute inset-0 p-6 md:p-8 flex flex-col justify-between z-10">
+               
+               {/* Index Number */}
+               <div className="font-mono text-[10px] tracking-[0.3em] text-white/40 group-hover:text-white transition-colors duration-500">
+                  {role.number}
+               </div>
 
-login(userData);
-setShowAuth(false);
+               {/* Title & Desc */}
+               <div className="flex flex-col justify-end h-32 md:h-40 relative">
+                  
+                  {/* Clean Sans-Serif Title (No more cringe italics) */}
+                  <h3 className={`font-sans text-2xl md:text-3xl lg:text-4xl font-light tracking-[0.2em] uppercase text-white/80 ${role.textColor} transition-all duration-700 origin-bottom-left transform group-hover:-translate-y-4 md:group-hover:-translate-y-6`}>
+                    {role.title}
+                  </h3>
+                  
+                  {/* Description */}
+                  <div className="absolute bottom-0 left-0 w-full opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-700 delay-100">
+                    <p className="max-w-[95%] md:max-w-[85%] text-[10px] md:text-xs text-brand-pearl font-mono leading-relaxed border-l border-white/20 pl-4">
+                      {role.desc}
+                    </p>
+                  </div>
 
-const roleStr=(userData.role || selectedRole).toLowerCase();
+               </div>
+            </div>
 
-setTimeout(()=>{
+          </div>
+        ))}
+      </div>
 
-if(roleStr==="listener"){
-navigate("/feed");
-}
-else{
-navigate(`/studio/${roleStr}`);
-}
-
-},100);
-
-};
-
-return (
-
-<div
-ref={containerRef}
-className="min-h-screen w-full flex flex-col items-center justify-center bg-[#050505] px-8 relative overflow-hidden"
->
-
-{showAuth && (
-<AuthModal
-role={selectedRole}
-onClose={()=>setShowAuth(false)}
-onSuccess={handleAuthSuccess}
-/>
-)}
-
-<h2 className="role-header font-serif text-sm tracking-[0.4em] text-neutral-500 uppercase mb-12 text-center">
-Define Your Space
-</h2>
-
-<div className="flex w-full max-w-7xl flex-col md:flex-row gap-5 h-[70vh]">
-
-{roles.map((role,index)=>(
-  
-<div
-key={role.id}
-onClick={()=>handleRoleClick(role.title)}
-className="role-card group relative flex-1 cursor-pointer overflow-hidden border border-neutral-800/40 rounded-xl transition-all duration-[900ms] hover:flex-[1.4]"
->
-
-{/* Background Container */}
-
-<div className="absolute inset-0">
-
-{/* Image Background */}
-
-<img
-src={role.image}
-alt={role.title}
-onError={(e)=>{e.currentTarget.style.display="none"}}
-className="h-full w-full object-cover opacity-40 group-hover:scale-110 transition duration-[1500ms]"
-/>
-
-{/* Gradient fallback */}
-
-<div className={`absolute inset-0 bg-gradient-to-br ${role.gradient} opacity-80`} />
-
-</div>
-
-{/* Dark overlay */}
-
-<div className="absolute inset-0 bg-black/60 group-hover:bg-black/40 transition duration-500" />
-
-{/* Index */}
-
-<div className="absolute top-8 left-8 font-mono text-xs text-neutral-500 group-hover:text-white transition">
-0{index+1}
-</div>
-
-{/* Title */}
-
-<div className="absolute bottom-16 left-8 transition-transform duration-700 group-hover:-translate-y-6">
-
-<h3 className="font-serif text-3xl md:text-4xl lg:text-5xl text-neutral-400 group-hover:text-emerald-400 transition">
-
-{role.title}
-
-</h3>
-
-</div>
-
-{/* Description */}
-
-<div className="absolute bottom-8 left-8 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-700">
-
-<p className="max-w-[85%] text-xs md:text-sm text-neutral-300 tracking-wide">
-
-{role.desc}
-
-</p>
-
-</div>
-
-</div>
-
-))}
-
-</div>
-
-</div>
-
-);
-
+    </div>
+  );
 }
