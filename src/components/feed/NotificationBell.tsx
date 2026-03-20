@@ -44,32 +44,34 @@ export default function NotificationBell() {
     }
   };
 
-  // 🔥 THE PREMIUM GLASSMORPHIC DRAWER 🔥
+  // 🔥 THE PREMIUM LIGHT-MODE GLASSMORPHIC DRAWER 🔥
   const drawerContent = (
-    <div className="fixed inset-0 z-[99999] flex justify-end font-sans select-none">
+    <div className="fixed inset-0 z-[99999] flex justify-end font-sans select-none text-[#111111]">
       
-      {/* Background Overlay (Dark cinematic fade) */}
+      {/* Background Overlay (Soft blur fade) */}
       <div 
-        className="absolute inset-0 bg-[#010101]/60 backdrop-blur-sm transition-opacity duration-500 animate-in fade-in" 
+        className="absolute inset-0 bg-[#111111]/30 backdrop-blur-md transition-opacity duration-700 animate-in fade-in" 
         onClick={() => setIsOpen(false)}
       ></div>
       
       {/* Slide-out Drawer */}
-      <div className="relative w-full md:w-[450px] h-full bg-[#030305]/95 backdrop-blur-3xl border-l border-white/5 flex flex-col shadow-[-30px_0_60px_rgba(0,0,0,0.9)] animate-in slide-in-from-right duration-500 ease-out">
+      <div className="relative w-full md:w-[480px] h-full bg-[#F4F5F7]/95 backdrop-blur-3xl border-l border-white/50 flex flex-col shadow-[-40px_0_80px_rgba(0,0,0,0.1)] animate-in slide-in-from-right duration-700 ease-[cubic-bezier(0.76,0,0.24,1)]">
         
-        {/* Ambient Glow */}
-        <div className="absolute top-0 right-0 w-80 h-80 bg-[#6366F1]/5 blur-[100px] rounded-full pointer-events-none -z-10"></div>
+        {/* Ambient Top Glow */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#2563EB]/5 blur-[120px] rounded-full pointer-events-none -z-10"></div>
 
         {/* 🎩 Header */}
-        <div className="p-8 border-b border-white/5 flex items-center justify-between bg-transparent relative z-10 shrink-0">
+        <div className="p-10 border-b border-[#111111]/5 flex items-center justify-between bg-white/50 relative z-10 shrink-0">
           <div>
-             <h3 className="text-2xl font-serif italic text-[#F0F0EB] tracking-tight">System Alerts<span className="text-[#6366F1]">.</span></h3>
-             <p className="text-[9px] uppercase tracking-[0.4em] text-[#888888] font-black mt-1 font-mono">Live Network Activity</p>
+             <h3 className="text-3xl font-serif italic text-[#111111] tracking-tight leading-none mb-2">Network Alerts</h3>
+             <p className="text-[9px] uppercase tracking-[0.4em] text-[#111111]/40 font-black font-mono flex items-center gap-2">
+               <span className="w-1.5 h-1.5 bg-[#2563EB] rounded-full animate-pulse shadow-[0_0_10px_rgba(37,99,235,0.4)]"></span> Live Activity
+             </p>
           </div>
           
           <button 
             onClick={() => setIsOpen(false)} 
-            className="w-12 h-12 rounded-full border border-white/10 bg-[#010101] flex items-center justify-center text-[#888888] hover:text-[#F0F0EB] hover:bg-white/5 hover:border-white/30 transition-all duration-300 active:scale-95 group shadow-inner"
+            className="w-12 h-12 rounded-full border border-[#111111]/10 bg-white flex items-center justify-center text-[#111111]/40 hover:text-[#111111] hover:shadow-[0_10px_20px_rgba(0,0,0,0.05)] hover:border-[#111111]/20 transition-all duration-300 active:scale-95 group"
             title="Close Panel"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:rotate-90 transition-transform duration-500"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -77,17 +79,19 @@ export default function NotificationBell() {
         </div>
 
         {/* 📜 Notifications List */}
-        <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-4 custom-scrollbar" data-lenis-prevent="true">
+        <div className="flex-1 overflow-y-auto p-6 md:p-8 flex flex-col gap-5 custom-scrollbar" data-lenis-prevent="true">
           
           {/* EMPTY STATE */}
           {notifications.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center opacity-40">
-               <div className="w-24 h-24 rounded-full border border-white/10 flex items-center justify-center mb-6 bg-[#010101] shadow-inner relative">
-                  <div className="absolute inset-0 rounded-full border border-white/5 animate-[ping_3s_infinite]"></div>
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#888888]"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+            <div className="flex-1 flex flex-col items-center justify-center opacity-60">
+               <div className="w-28 h-28 rounded-[2rem] border border-[#111111]/10 flex items-center justify-center mb-8 bg-white shadow-sm relative overflow-hidden">
+                  <div className="absolute inset-0 rounded-[2rem] border border-[#2563EB]/20 animate-[ping_3s_infinite]"></div>
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#111111]/30"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
                </div>
-               <h3 className="text-xl font-serif italic text-[#F0F0EB] mb-2">No active signals</h3>
-               <p className="font-mono text-[9px] uppercase tracking-[0.3em] text-[#888888] text-center leading-relaxed">The network is currently quiet.<br/>Transmit assets to generate activity.</p>
+               <h3 className="text-2xl font-serif italic text-[#111111] mb-3">No Active Signals</h3>
+               <p className="font-mono text-[9px] uppercase tracking-[0.3em] font-black text-[#111111]/40 text-center leading-relaxed">
+                 The network is currently quiet.<br/>Transmit assets to generate activity.
+               </p>
             </div>
           ) : (
             
@@ -99,7 +103,7 @@ export default function NotificationBell() {
               return (
                 <div 
                   key={notif._id} 
-                  className={`p-5 rounded-[1.5rem] flex items-start gap-5 transition-all duration-500 cursor-pointer group border ${isUnread ? 'bg-[#6366F1]/10 border-[#6366F1]/30 shadow-[0_10px_30px_rgba(99,102,241,0.15)] hover:border-[#6366F1]/50 hover:-translate-y-1' : 'bg-[#010101] border-white/5 hover:border-white/20 hover:-translate-y-1'}`}
+                  className={`p-6 rounded-[2rem] flex items-start gap-6 transition-all duration-500 cursor-pointer group border ${isUnread ? 'bg-white border-[#2563EB]/20 shadow-[0_15px_30px_rgba(37,99,235,0.06)] hover:shadow-[0_20px_40px_rgba(37,99,235,0.1)] hover:-translate-y-1' : 'bg-white/50 border-[#111111]/5 hover:bg-white hover:border-[#111111]/10 hover:shadow-sm hover:-translate-y-1'}`}
                   onClick={() => {
                     setIsOpen(false);
                     if(notif.type === 'follow') navigate(`/profile/${notif.sender._id}`);
@@ -107,17 +111,17 @@ export default function NotificationBell() {
                 >
                   {/* Sender Avatar */}
                   <div 
-                    className={`w-12 h-12 rounded-full overflow-hidden shrink-0 border-2 bg-[#010101] shadow-inner transition-colors duration-500 ${isUnread ? 'border-[#6366F1]/80 shadow-[0_0_15px_rgba(99,102,241,0.4)]' : 'border-[#030305] group-hover:border-white/30'}`}
+                    className={`w-14 h-14 rounded-[1.2rem] overflow-hidden shrink-0 border bg-[#F4F5F7] shadow-inner transition-all duration-500 ${isUnread ? 'border-[#2563EB]/50' : 'border-[#111111]/10 group-hover:border-[#111111]/20'}`}
                     onClick={(e) => { e.stopPropagation(); navigate(`/profile/${notif.sender._id}`); setIsOpen(false); }}
                   >
-                    <img src={avatarSrc} alt="avt" className={`w-full h-full scale-110 object-cover ${isUnread ? 'grayscale-0' : 'grayscale group-hover:grayscale-0'} transition-all duration-500`} />
+                    <img src={avatarSrc} alt="avt" className={`w-full h-full object-cover scale-105 group-hover:scale-110 ${isUnread ? 'grayscale-0' : 'grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100'} transition-all duration-700`} />
                   </div>
                   
                   {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-[#888888] font-light leading-relaxed">
+                  <div className="flex-1 min-w-0 pt-1">
+                    <p className="text-[13px] text-[#111111]/60 font-medium leading-relaxed">
                       <span 
-                        className="font-bold text-[#F0F0EB] cursor-pointer hover:underline underline-offset-4 transition-all mr-1" 
+                        className="font-bold text-[#111111] cursor-pointer hover:text-[#2563EB] transition-colors mr-1" 
                         onClick={(e) => { e.stopPropagation(); navigate(`/profile/${notif.sender._id}`); setIsOpen(false); }}
                       >
                         {notif.sender?.username}
@@ -127,19 +131,19 @@ export default function NotificationBell() {
                       {notif.type === 'follow' && 'initiated a network sync with you.'}
                       {notif.type === 'comment' && 'left feedback on your asset: '}
                       
-                      {notif.post && <span className="font-serif italic text-[#F0F0EB] ml-1 transition-colors">"{notif.post.title}"</span>}
+                      {notif.post && <span className="font-serif italic text-[#111111] ml-1 transition-colors block mt-1">"{notif.post.title}"</span>}
                     </p>
                     
                     {/* Comment Block */}
                     {notif.type === 'comment' && notif.text && (
-                      <div className="mt-3 p-4 rounded-xl bg-[#030305] border border-white/5 text-[11px] text-[#F0F0EB] italic leading-relaxed shadow-inner font-serif border-l-2 border-l-[#6366F1]/50">
+                      <div className="mt-4 p-5 rounded-2xl bg-[#F9F9FB] border border-[#111111]/5 text-xs text-[#111111]/80 italic leading-relaxed shadow-inner font-serif border-l-2 border-l-[#2563EB]/50">
                         "{notif.text}"
                       </div>
                     )}
                     
                     {/* Timestamp */}
-                    <span className="text-[8px] text-[#6366F1] font-mono mt-4 block uppercase tracking-[0.3em] font-black">
-                      {new Date(notif.createdAt).toLocaleDateString()} <span className="text-white/20 mx-1">•</span> {new Date(notif.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                    <span className={`text-[8px] font-mono mt-4 block uppercase tracking-[0.3em] font-black ${isUnread ? 'text-[#2563EB]' : 'text-[#111111]/30'}`}>
+                      {new Date(notif.createdAt).toLocaleDateString()} <span className="text-[#111111]/10 mx-1">•</span> {new Date(notif.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                     </span>
                   </div>
                 </div>
@@ -148,6 +152,13 @@ export default function NotificationBell() {
           )}
         </div>
       </div>
+
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(17,17,17,0.1); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #2563EB; }
+      `}</style>
     </div>
   );
 
@@ -156,7 +167,7 @@ export default function NotificationBell() {
       {/* 🔔 THE TRIGGER BUTTON (In Header) */}
       <button 
         onClick={handleOpenDrawer}
-        className="relative w-12 h-12 md:w-14 md:h-14 rounded-full bg-[#010101]/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-[#888888] hover:text-[#F0F0EB] hover:border-[#6366F1]/50 hover:bg-[#6366F1]/10 hover:shadow-[0_0_20px_rgba(99,102,241,0.2)] transition-all duration-500 group active:scale-95 shadow-inner"
+        className="relative w-10 h-10 md:w-12 md:h-12 rounded-full bg-white border border-[#111111]/10 flex items-center justify-center text-[#111111]/40 hover:text-[#111111] hover:border-[#2563EB]/50 hover:bg-[#2563EB]/5 hover:shadow-[0_10px_20px_rgba(37,99,235,0.15)] transition-all duration-500 group active:scale-95 shadow-sm"
         title="System Alerts"
       >
         {/* Premium SVG Bell */}
@@ -167,7 +178,7 @@ export default function NotificationBell() {
         
         {/* Neon Unread Dot */}
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-[#6366F1] rounded-full border-[2.5px] border-[#030305] animate-pulse shadow-[0_0_10px_#6366F1]"></span>
+          <span className="absolute top-0 right-0 w-3 h-3 bg-[#2563EB] rounded-full border-[2px] border-white animate-pulse shadow-[0_0_8px_rgba(37,99,235,0.8)]"></span>
         )}
       </button>
 

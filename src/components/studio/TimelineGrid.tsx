@@ -71,19 +71,20 @@ export default function TimelineGrid({
   };
 
   return (
-    <div className="flex-1 flex border-t border-white/5 bg-[#0A0A0C] relative overflow-hidden select-none" id="timeline-container">
+    // 🔥 PREMIUM VANTABLACK BASE (#080808) 🔥
+    <div className="flex-1 flex border-t border-[#111111]/50 bg-[#080808] relative overflow-hidden select-none" id="timeline-container">
       
       {/* ========================================================= */}
       {/* 🎛️ LEFT SIDEBAR: TRACK MIXER CONSOLE                        */}
       {/* ========================================================= */}
-      <div className="w-[320px] bg-[#030305] border-r border-white/5 flex flex-col z-30 shadow-[10px_0_30px_rgba(0,0,0,0.8)] overflow-y-auto custom-scrollbar shrink-0">
+      <div className="w-[320px] bg-[#080808] border-r border-[#111111]/40 flex flex-col z-30 shadow-[10px_0_30px_rgba(0,0,0,0.9)] overflow-y-auto custom-scrollbar shrink-0">
           
           {/* Header */}
-          <div className="h-[46px] border-b border-white/5 flex justify-between items-center px-6 bg-[#010101] sticky top-0 z-40">
-              <span className="text-[9px] text-[#888888] uppercase font-black tracking-[0.4em]">Console Layers</span>
+          <div className="h-[46px] border-b border-[#111111]/50 flex justify-between items-center px-6 bg-[#0A0A0C] sticky top-0 z-40 backdrop-blur-md">
+              <span className="text-[9px] text-[#888888] uppercase font-black font-mono tracking-[0.4em]">Console Layers</span>
               <button 
                 onClick={onAddTrack} 
-                className="w-6 h-6 rounded bg-white/5 hover:bg-[#D4AF37] text-white hover:text-black font-bold flex items-center justify-center transition-all"
+                className="w-6 h-6 rounded-full bg-transparent border border-white/10 hover:border-[#E63946] text-[#888] hover:text-[#E63946] hover:shadow-[0_0_10px_rgba(230,57,70,0.2)] font-bold flex items-center justify-center transition-all duration-300"
                 title="Add New Layer"
               >
                 +
@@ -95,38 +96,40 @@ export default function TimelineGrid({
             <div 
               key={track.id} 
               onClick={() => setActiveTrackId(track.id)} 
-              className={`h-[120px] border-b border-white/5 p-5 flex flex-col justify-center cursor-pointer transition-all duration-300 ${activeTrackId === track.id ? 'bg-[#0A0A0C] border-l-[3px] border-l-[#D4AF37] shadow-[inset_10px_0_20px_rgba(212,175,55,0.05)]' : 'bg-transparent hover:bg-white/[0.02] border-l-[3px] border-l-transparent'}`}
+              className={`h-[120px] border-b border-[#111111]/40 p-5 flex flex-col justify-center cursor-pointer transition-all duration-300 ${activeTrackId === track.id ? 'bg-[#0A0A0C] border-l-[3px] border-l-[#E63946] shadow-[inset_15px_0_30px_rgba(230,57,70,0.03)]' : 'bg-transparent hover:bg-white/[0.01] border-l-[3px] border-l-transparent'}`}
             >
                 <div className="flex justify-between items-start w-full mb-3">
                    <div className="flex flex-col">
-                       <span className="text-[7px] text-[#D4AF37] uppercase font-black mb-1.5 tracking-[0.3em]">{track.preset && track.preset !== 'clean' ? `FX: ${track.preset}` : 'RAW SIGNAL'}</span>
+                       <span className="text-[7px] text-[#E63946] uppercase font-black font-mono mb-1.5 tracking-[0.3em]">{track.preset && track.preset !== 'clean' ? `FX: ${track.preset}` : 'RAW SIGNAL'}</span>
+                       {/* 🎩 Editorial Typo for Track Name */}
                        <input 
                          type="text" 
                          value={track.title} 
                          onChange={(e) => updateTrack(track.id, 'title', e.target.value)} 
-                         className="bg-transparent border-none outline-none text-[13px] font-sans font-bold text-[#F0F0EB] uppercase tracking-wide w-28 truncate placeholder:text-[#888888]/30 focus:border-b focus:border-white/20" 
+                         className="bg-transparent border-none outline-none text-[18px] font-serif italic text-[#F4F3EF] tracking-tight w-32 truncate placeholder:text-[#888888]/30 focus:border-b focus:border-white/10 transition-all" 
                        />
                    </div>
                    
-                   <div className="flex gap-1.5 bg-[#010101] p-1.5 rounded-lg border border-white/5">
+                   <div className="flex gap-1.5 bg-[#030305] p-1.5 rounded-lg border border-white/5 shadow-inner">
                       {/* Mute Button */}
-                      <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, 'isMuted', !track.isMuted); }} className={`w-6 h-6 rounded flex items-center justify-center text-[9px] font-black transition-all ${track.isMuted ? 'bg-[#E63946] text-white shadow-[0_0_10px_rgba(230,57,70,0.4)]' : 'bg-white/5 text-[#888888] hover:text-white'}`}>M</button>
+                      <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, 'isMuted', !track.isMuted); }} className={`w-6 h-6 rounded flex items-center justify-center text-[9px] font-black transition-all duration-300 ${track.isMuted ? 'bg-[#E63946] text-white shadow-[0_0_15px_rgba(230,57,70,0.4)]' : 'bg-[#111111] text-[#888888] hover:text-white hover:bg-white/10'}`}>M</button>
                       
-                      {/* Solo Button */}
-                      <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, 'isSolo', !track.isSolo); }} className={`w-6 h-6 rounded flex items-center justify-center text-[9px] font-black transition-all ${track.isSolo ? 'bg-[#D4AF37] text-black shadow-[0_0_10px_rgba(212,175,55,0.4)]' : 'bg-white/5 text-[#888888] hover:text-white'}`}>S</button>
+                      {/* Solo Button (White in Dark theme for contrast) */}
+                      <button onClick={(e) => { e.stopPropagation(); updateTrack(track.id, 'isSolo', !track.isSolo); }} className={`w-6 h-6 rounded flex items-center justify-center text-[9px] font-black transition-all duration-300 ${track.isSolo ? 'bg-[#F4F3EF] text-[#080808] shadow-[0_0_15px_rgba(255,255,255,0.2)]' : 'bg-[#111111] text-[#888888] hover:text-white hover:bg-white/10'}`}>S</button>
 
                       {/* Delete Button */}
-                      <button onClick={(e) => { e.stopPropagation(); onDeleteTrack(track.id); }} className="w-6 h-6 rounded flex items-center justify-center text-[10px] bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all ml-1" title="Purge Track">
+                      <button onClick={(e) => { e.stopPropagation(); onDeleteTrack(track.id); }} className="w-6 h-6 rounded flex items-center justify-center text-[10px] bg-transparent text-[#888888] hover:bg-[#E63946] hover:text-white transition-all ml-1" title="Purge Track">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                       </button>
                    </div>
                 </div>
                 
-                {/* Volume Slider (Premium minimal look) */}
+                {/* Volume Slider (Ultra-minimal) */}
                 <div className="flex items-center gap-4 mt-auto">
-                   <span className="text-[8px] text-[#888888] font-black uppercase tracking-widest">VOL</span>
-                   <div className="relative flex-1 h-1.5 bg-[#010101] rounded-full border border-white/5 overflow-hidden">
-                       <div className="absolute top-0 left-0 h-full bg-white/20 transition-all" style={{ width: `${track.volume * 100}%` }}></div>
+                   <span className="text-[8px] text-[#888888] font-black uppercase tracking-[0.2em] font-mono">VOL</span>
+                   <div className="relative flex-1 h-1 bg-[#111111] rounded-full overflow-hidden">
+                       {/* Red fill for volume */}
+                       <div className="absolute top-0 left-0 h-full bg-[#E63946] transition-all" style={{ width: `${track.volume * 100}%` }}></div>
                        <input type="range" min="0" max="1" step="0.01" value={track.volume} onChange={(e)=>updateTrack(track.id, 'volume', parseFloat(e.target.value))} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
                    </div>
                    <span className="text-[8px] text-[#888888] font-mono w-6 text-right">{Math.round(track.volume * 100)}%</span>
@@ -138,80 +141,80 @@ export default function TimelineGrid({
       {/* ========================================================= */}
       {/* 📏 RIGHT SIDEBAR: THE TIMELINE GRID & BLOCKS               */}
       {/* ========================================================= */}
-      <div className="flex-1 relative overflow-x-auto bg-[#0A0A0C] custom-scrollbar">
+      <div className="flex-1 relative overflow-x-auto bg-[#080808] custom-scrollbar">
         
         {/* Timeline Ruler (Timecodes) */}
         <div 
           onClick={handleTimelineClick} 
-          className="h-[46px] border-b border-white/10 bg-[#030305] sticky top-0 z-20 cursor-text flex items-end pb-1" 
+          className="h-[46px] border-b border-[#111111]/40 bg-[#0A0A0C] sticky top-0 z-20 cursor-text flex items-end pb-1" 
           style={{ 
               width: `${totalWidth}px`, 
-              backgroundImage: `repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, transparent 1px, transparent ${pixelsPerSecond}px)` 
+              backgroundImage: `repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent ${pixelsPerSecond}px)` 
           }}
         >
             {[...Array(duration)].map((_, i) => (
-                i % 2 === 0 ? <span key={i} className="absolute text-[9px] text-[#888888] font-mono tracking-[0.2em]" style={{left: `${i * pixelsPerSecond + 6}px`}}>00:{i.toString().padStart(2, '0')}</span> : null
+                i % 2 === 0 ? <span key={i} className="absolute text-[8px] text-[#888888] font-mono tracking-[0.2em]" style={{left: `${i * pixelsPerSecond + 6}px`}}>00:{i.toString().padStart(2, '0')}</span> : null
             ))}
         </div>
         
         {/* Subtle Vertical Grid Lines behind tracks */}
         <div className="absolute top-[46px] bottom-0 pointer-events-none z-0" style={{ width: `${totalWidth}px`, backgroundImage: `linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)`, backgroundSize: `${pixelsPerSecond}px 100%` }}></div>
         
-        {/* 🔻 THE PLAYHEAD (Aggressive Red Line) */}
+        {/* 🔻 THE PLAYHEAD (Aggressive Red Line - ON AIR Style) */}
         <div ref={playheadRef} className="absolute top-0 bottom-0 w-[1px] bg-[#E63946] z-50 pointer-events-none flex flex-col items-center" style={{ left: '0px' }}>
-            <div className="w-3 h-3 bg-[#E63946] rotate-45 -mt-1.5 shadow-[0_0_10px_#E63946]"></div>
+            <div className="w-3 h-3 bg-[#E63946] rotate-45 -mt-1.5 shadow-[0_0_15px_#E63946]"></div>
             <div className="w-[1px] h-full bg-gradient-to-b from-[#E63946] to-transparent opacity-80"></div>
         </div>
 
         {/* 🎛️ TRACK LANES AND BLOCKS */}
         <div className="relative pt-0 z-10" style={{ width: `${totalWidth}px` }}>
             {tracks.map((track: any) => (
-              <div key={track.id} className={`h-[120px] border-b border-white/5 relative flex items-center px-4 group/lane transition-colors ${activeTrackId === track.id ? 'bg-white/[0.01]' : ''}`}>
+              <div key={track.id} className={`h-[120px] border-b border-[#111111]/40 relative flex items-center px-4 group/lane transition-colors ${activeTrackId === track.id ? 'bg-white/[0.01]' : ''}`}>
                   
                   {/* AUDIO BLOCK WITH REAL WAVEFORMS */}
                   {track.audioUrl && !track.isProcessing && (
                     <div 
-                        className={`absolute h-[80px] rounded-[1rem] flex items-center shadow-[0_10px_20px_rgba(0,0,0,0.4)] overflow-hidden transition-colors ${interaction.trackId === track.id ? 'brightness-125' : 'hover:brightness-110'} ${track.type === 'beat' ? 'bg-[#D4AF37]/15 border border-[#D4AF37]/50' : 'bg-[#F0F0EB]/10 border border-[#F0F0EB]/30'}`}
+                        className={`absolute h-[80px] rounded-[1rem] flex items-center shadow-[0_15px_30px_rgba(0,0,0,0.5)] overflow-hidden transition-all duration-300 ${interaction.trackId === track.id ? 'brightness-125 scale-[1.01]' : 'hover:brightness-110'} ${track.type === 'beat' ? 'bg-white/5 border border-white/10' : 'bg-[#E63946]/10 border border-[#E63946]/30'}`}
                         style={{ left: `${track.startTime * pixelsPerSecond}px`, width: `${track.duration * pixelsPerSecond}px` }}
                     >
                         
                         {/* Left Trim Handle */}
-                        <div onMouseDown={(e) => handleMouseDown(e, track.id, track, 'resize-left')} className="absolute left-0 top-0 bottom-0 w-4 hover:w-6 bg-gradient-to-r from-black/60 to-transparent hover:from-white/20 cursor-col-resize z-20 transition-all border-r border-white/10 flex items-center justify-start pl-1">
-                            <div className="w-0.5 h-4 bg-white/50 rounded-full"></div>
+                        <div onMouseDown={(e) => handleMouseDown(e, track.id, track, 'resize-left')} className="absolute left-0 top-0 bottom-0 w-4 hover:w-6 bg-gradient-to-r from-[#030305]/80 to-transparent hover:from-white/10 cursor-col-resize z-20 transition-all border-r border-white/5 flex items-center justify-start pl-1">
+                            <div className="w-0.5 h-4 bg-white/40 rounded-full"></div>
                         </div>
 
                         {/* Drag Area */}
                         <div onMouseDown={(e) => handleMouseDown(e, track.id, track, 'drag')} className={`w-full h-full absolute inset-0 z-10 ${interaction.type === 'drag' ? 'cursor-grabbing' : 'cursor-grab'}`}></div>
                         
-                        {/* 🔥 THE REAL WAVEFORM INJECTED HERE 🔥 */}
-                        <WaveformBlock audioUrl={track.audioUrl} color={track.type === 'beat' ? '#D4AF37' : '#F0F0EB'} />
+                        {/* 🔥 THE REAL WAVEFORM INJECTED HERE (Red for Vocal, White/Grey for Beat) 🔥 */}
+                        <WaveformBlock audioUrl={track.audioUrl} color={track.type === 'beat' ? '#888888' : '#E63946'} />
                         
-                        {/* Audio Block Info Overlay */}
-                        <div className="absolute top-2 left-6 text-[9px] font-black text-white z-10 truncate pointer-events-none bg-black/60 backdrop-blur-sm px-2.5 py-1 rounded-md uppercase tracking-widest border border-white/10 shadow-lg flex items-center gap-2">
-                           <span className={`w-1.5 h-1.5 rounded-full ${track.type === 'beat' ? 'bg-[#D4AF37]' : 'bg-white'}`}></span>
+                        {/* Audio Block Info Overlay (Premium Dark Glassmorphism) */}
+                        <div className="absolute top-2 left-6 text-[9px] font-black text-[#F4F3EF] z-10 truncate pointer-events-none bg-[#080808]/80 backdrop-blur-md px-2.5 py-1 rounded-md uppercase tracking-[0.2em] border border-white/5 shadow-lg flex items-center gap-2">
+                           <span className={`w-1.5 h-1.5 rounded-full ${track.type === 'beat' ? 'bg-white/50' : 'bg-[#E63946] shadow-[0_0_8px_#E63946]'}`}></span>
                            {track.title}
                         </div>
 
                         {/* Right Trim Handle */}
-                        <div onMouseDown={(e) => handleMouseDown(e, track.id, track, 'resize-right')} className="absolute right-0 top-0 bottom-0 w-4 hover:w-6 bg-gradient-to-l from-black/60 to-transparent hover:from-white/20 cursor-col-resize z-20 transition-all border-l border-white/10 flex items-center justify-end pr-1">
-                             <div className="w-0.5 h-4 bg-white/50 rounded-full"></div>
+                        <div onMouseDown={(e) => handleMouseDown(e, track.id, track, 'resize-right')} className="absolute right-0 top-0 bottom-0 w-4 hover:w-6 bg-gradient-to-l from-[#030305]/80 to-transparent hover:from-white/10 cursor-col-resize z-20 transition-all border-l border-white/5 flex items-center justify-end pr-1">
+                             <div className="w-0.5 h-4 bg-white/40 rounded-full"></div>
                         </div>
                     </div>
                   )}
 
                   {/* Processing State Block */}
                   {track.isProcessing && (
-                    <div className="absolute h-[80px] bg-[#010101] border border-dashed border-[#888888]/40 rounded-[1rem] flex items-center justify-center px-4" style={{ left: '0px', width: '200px' }}>
-                        <span className="text-[9px] font-mono text-[#D4AF37] animate-pulse uppercase tracking-[0.3em]">Processing Audio...</span>
+                    <div className="absolute h-[80px] bg-[#0A0A0C] border border-dashed border-[#E63946]/50 rounded-[1rem] flex items-center justify-center px-4" style={{ left: '0px', width: '200px' }}>
+                        <span className="text-[9px] font-mono text-[#E63946] animate-pulse uppercase tracking-[0.3em]">Processing Audio...</span>
                     </div>
                   )}
 
-                  {/* 🔴 LIVE RECORDING BLOCK */}
+                  {/* 🔴 LIVE RECORDING BLOCK (ON AIR FEEL) */}
                   {isRecording && activeTrackId === track.id && (
-                    <div ref={liveRecordBlockRef} className="absolute h-[80px] bg-[#E63946]/15 border border-[#E63946] rounded-r-[1rem] flex items-center overflow-hidden shadow-[0_0_20px_rgba(230,57,70,0.2)]" style={{ left: `${pausedTimeRef.current * pixelsPerSecond}px`, width: '0px' }}>
+                    <div ref={liveRecordBlockRef} className="absolute h-[80px] bg-[#E63946]/20 border border-[#E63946] rounded-r-[1rem] flex items-center overflow-hidden shadow-[0_0_20px_rgba(230,57,70,0.3)]" style={{ left: `${pausedTimeRef.current * pixelsPerSecond}px`, width: '0px' }}>
                         {/* Recording Stripes Pattern */}
-                        <div className="w-full h-full absolute inset-0 opacity-20" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255,255,255,0.5) 5px, rgba(255,255,255,0.5) 10px)' }}></div>
-                        <span className="text-[10px] font-black text-[#E63946] z-10 ml-4 animate-pulse uppercase tracking-[0.3em] bg-black/60 px-3 py-1 rounded-md border border-[#E63946]/50">REC Signal</span>
+                        <div className="w-full h-full absolute inset-0 opacity-10" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255,255,255,0.5) 5px, rgba(255,255,255,0.5) 10px)' }}></div>
+                        <span className="text-[9px] font-mono font-black text-[#E63946] z-10 ml-4 animate-pulse uppercase tracking-[0.3em] bg-[#080808]/90 px-3 py-1 rounded-md border border-[#E63946]/30 backdrop-blur-md">REC</span>
                     </div>
                   )}
               </div>

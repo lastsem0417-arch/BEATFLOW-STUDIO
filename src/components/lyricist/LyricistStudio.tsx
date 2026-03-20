@@ -1,11 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import gsap from 'gsap';
 import DraggableWebcam from '../studio/DraggableWebcam'; 
 
 export default function LyricistStudio() {
   const navigate = useNavigate();
   const location = useLocation();
+  const containerRef = useRef<HTMLDivElement>(null);
+  
   const currentUser = JSON.parse(sessionStorage.getItem('beatflow_user') || '{}');
   const safeUserId = currentUser.id || currentUser._id;
 
@@ -18,6 +21,17 @@ export default function LyricistStudio() {
   const [lastSaved, setLastSaved] = useState<string | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // 🔥 GSAP EDITORIAL REVEAL 🔥
+  useLayoutEffect(() => {
+    let ctx = gsap.context(() => {
+      gsap.fromTo('.studio-reveal', 
+        { opacity: 0, y: 30, filter: "blur(5px)" }, 
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 1.5, stagger: 0.1, ease: 'power4.out', delay: 0.2 }
+      );
+    }, containerRef);
+    return () => ctx.revert();
+  }, []);
 
   useEffect(() => {
     if (location.state && location.state.project) {
@@ -107,12 +121,16 @@ export default function LyricistStudio() {
   };
 
   return (
-    // 🔥 HIGH-END ONYX FOCUS ROOM 🔥
-    <div className="h-screen w-full bg-[#030305] text-[#F0F0EB] flex flex-col font-sans overflow-hidden relative selection:bg-[#52B788]/40 select-none">
+    // 🔥 PREMIUM EDITORIAL CANVAS (#F9F8F6) WITH EMERALD ACCENTS 🔥
+    <div ref={containerRef} className="h-screen w-full bg-[#F9F8F6] text-[#0A1A14] flex flex-col font-sans overflow-hidden relative selection:bg-[#10B981] selection:text-white select-none">
       
-      {/* Cinematic Ambient Glow & Noise */}
-      <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-[0.03] mix-blend-screen pointer-events-none z-0"></div>
-      <div className="absolute top-[-20%] left-[50%] -translate-x-1/2 w-[80vw] h-[50vh] bg-[#52B788]/5 blur-[150px] rounded-full pointer-events-none z-0"></div>
+      {/* 📖 The Premium Canvas Texture & Glow */}
+      {/* Paper texture overlay */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" style={{ backgroundImage: 'radial-gradient(#0A1A14 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
+      <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-[0.04] mix-blend-multiply pointer-events-none z-0"></div>
+      
+      {/* Ambient subtle emerald glow */}
+      <div className="absolute top-[-10%] right-[-5%] w-[60vw] h-[50vh] bg-[#10B981]/5 blur-[150px] rounded-full pointer-events-none z-0"></div>
 
       {/* 📸 DRAGGABLE WEBCAM COMPONENT */}
       <DraggableWebcam />
@@ -120,68 +138,72 @@ export default function LyricistStudio() {
       {/* ========================================================= */}
       {/* 🎩 TOP TRANSPORT & COMMAND BAR                             */}
       {/* ========================================================= */}
-      <div className="h-24 border-b border-white/5 bg-[#010101]/80 backdrop-blur-3xl flex items-center justify-between px-6 md:px-12 z-20 shrink-0 shadow-[0_20px_40px_rgba(0,0,0,0.8)]">
+      <div className="h-28 md:h-32 border-b border-[#0A1A14]/5 bg-white/80 backdrop-blur-xl flex items-center justify-between px-8 md:px-16 z-20 shrink-0 shadow-[0_10px_30px_rgba(0,0,0,0.02)]">
         
         {/* Left: Branding & Session Name */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-6 md:gap-10 studio-reveal">
           <button 
             onClick={() => navigate('/studio/lyricist')} 
-            className="group flex items-center justify-center w-12 h-12 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/30 transition-all duration-300"
-            title="Exit Pad"
+            className="group flex items-center justify-center w-14 h-14 rounded-full border border-[#0A1A14]/10 bg-white hover:bg-[#10B981] hover:border-[#10B981] transition-all duration-300 shadow-sm active:scale-95"
+            title="Exit Canvas"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#888888] group-hover:text-white transition-colors"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#0A1A14]/50 group-hover:text-white transition-colors"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
           </button>
           
-          <div className="w-[1px] h-8 bg-white/10 hidden md:block"></div>
+          <div className="w-[1px] h-10 bg-[#0A1A14]/10 hidden md:block"></div>
           
           <div className="flex flex-col relative z-10 group">
-             <span className="text-[8px] uppercase tracking-[0.4em] font-black text-[#888888] mb-1">Active File</span>
+             <span className="text-[9px] uppercase tracking-[0.4em] font-black text-[#0A1A14]/40 mb-1 flex items-center gap-2 font-mono">
+               <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse"></span>
+               Canvas Title
+             </span>
              <input 
                type="text" 
                value={projectName} 
                onChange={(e) => setProjectName(e.target.value)} 
-               className="bg-transparent text-2xl md:text-3xl font-serif italic text-[#F0F0EB] outline-none w-48 md:w-80 border-b border-transparent focus:border-[#52B788]/50 hover:border-white/20 transition-all placeholder:text-[#888888]/40 pb-1" 
+               className="bg-transparent text-3xl md:text-5xl font-serif italic text-[#0A1A14] outline-none w-48 md:w-96 border-b border-transparent focus:border-[#10B981]/50 hover:border-[#0A1A14]/20 transition-all placeholder:text-[#0A1A14]/20 pb-1 tracking-tight" 
              />
           </div>
         </div>
 
         {/* Right: Tools & Actions */}
-        <div className="flex items-center gap-4 md:gap-8 relative z-10">
+        <div className="flex items-center gap-6 md:gap-10 relative z-10 studio-reveal">
           
-          {/* Real-time Flow Meter HUD */}
-          <div className="hidden lg:flex items-center gap-4 bg-[#0A0A0C] px-5 py-2.5 rounded-full border border-white/5 shadow-inner">
+          {/* Real-time Flow Meter HUD (Editorial Style) */}
+          <div className="hidden lg:flex items-center gap-4 px-6 py-3 rounded-full border border-[#0A1A14]/5 bg-[#F9F8F6] shadow-inner">
             <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-[#52B788] rounded-full shadow-[0_0_8px_#52B788] animate-pulse"></span>
-                <span className="text-[9px] uppercase tracking-[0.3em] text-[#888888] font-black">Flow</span>
+                <span className="text-[9px] uppercase tracking-[0.4em] text-[#0A1A14]/50 font-black">Flow Count</span>
             </div>
-            <span className="text-base font-mono text-[#52B788]">{syllableCount}</span>
+            <span className="text-xl font-serif italic text-[#10B981]">{syllableCount}</span>
           </div>
 
-          <div className="w-[1px] h-6 bg-white/10 hidden lg:block"></div>
+          <div className="w-[1px] h-8 bg-[#0A1A14]/10 hidden lg:block"></div>
 
-          {/* AI Copilot Button */}
-          <button 
-            onClick={triggerAIGhostwriter} 
-            disabled={isAiLoading}
-            className="flex items-center gap-2 px-5 py-3 bg-[#52B788]/5 border border-[#52B788]/30 text-[#52B788] rounded-full text-[9px] uppercase tracking-[0.2em] font-black hover:bg-[#52B788] hover:text-[#010101] hover:shadow-[0_0_20px_rgba(82,183,136,0.4)] transition-all duration-500 disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-[#52B788] active:scale-95"
-          >
-            {isAiLoading ? (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-            ) : (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            )}
-            {isAiLoading ? 'Generating...' : 'Spark AI'}
-          </button>
+          <div className="flex items-center gap-4">
+              {/* AI Copilot Button */}
+              <button 
+                onClick={triggerAIGhostwriter} 
+                disabled={isAiLoading}
+                className="flex items-center justify-center gap-2 px-6 py-3.5 bg-white border border-[#10B981]/20 text-[#10B981] rounded-full text-[10px] uppercase tracking-[0.2em] font-black hover:bg-[#10B981] hover:text-white hover:shadow-[0_10px_20px_rgba(16,185,129,0.2)] transition-all duration-300 disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-[#10B981] active:-translate-y-0.5 shadow-sm"
+              >
+                {isAiLoading ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                )}
+                {isAiLoading ? 'Synthesizing...' : 'Spark AI'}
+              </button>
 
-          {/* Save & Sync Button */}
-          <button 
-            onClick={() => handleSaveToVault(false)} 
-            disabled={isSaving} 
-            className="px-8 py-3 bg-[#F0F0EB] text-[#010101] border border-transparent rounded-full text-[10px] uppercase tracking-[0.3em] font-black hover:bg-[#52B788] hover:text-white shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(82,183,136,0.4)] transition-all duration-500 disabled:opacity-50 active:scale-95 flex flex-col items-center justify-center relative overflow-hidden"
-          >
-            <span className="relative z-10">{isSaving ? 'Syncing...' : 'Sync to Vault'}</span>
-            {lastSaved && !isSaving && <span className="absolute bottom-0.5 text-[6px] text-black/50 font-mono">Last: {lastSaved}</span>}
-          </button>
+              {/* Save & Sync Button */}
+              <button 
+                onClick={() => handleSaveToVault(false)} 
+                disabled={isSaving} 
+                className="px-8 py-3.5 bg-[#0A1A14] text-white border border-transparent rounded-full text-[10px] uppercase tracking-[0.3em] font-black hover:bg-[#10B981] hover:shadow-[0_10px_30px_rgba(16,185,129,0.3)] transition-all duration-300 disabled:opacity-50 active:-translate-y-0.5 flex flex-col items-center justify-center relative overflow-hidden"
+              >
+                <span className="relative z-10">{isSaving ? 'Encrypting...' : 'Commit Draft'}</span>
+                {lastSaved && !isSaving && <span className="absolute bottom-1 text-[6px] text-white/50 font-mono">Last: {lastSaved}</span>}
+              </button>
+          </div>
         </div>
       </div>
 
@@ -190,9 +212,9 @@ export default function LyricistStudio() {
       {/* ========================================================= */}
       <div className="flex-1 flex overflow-hidden relative z-10">
         
-        {/* Structure Tag Sidebar */}
-        <div className="w-20 md:w-28 h-full border-r border-white/5 bg-[#010101]/80 backdrop-blur-md flex flex-col items-center py-10 gap-5 shrink-0 shadow-[10px_0_40px_rgba(0,0,0,0.5)] z-20 overflow-y-auto custom-scrollbar" data-lenis-prevent="true">
-          <span className="text-[8px] font-mono uppercase tracking-widest text-[#888888] mb-2 -rotate-90 origin-center whitespace-nowrap mt-8 shrink-0">Structure</span>
+        {/* Structure Tag Sidebar (Left) */}
+        <div className="w-24 md:w-32 h-full border-r border-[#0A1A14]/5 bg-[#F9F8F6]/80 backdrop-blur-xl flex flex-col items-center py-12 gap-6 shrink-0 shadow-[10px_0_30px_rgba(0,0,0,0.02)] z-20 overflow-y-auto custom-scrollbar studio-reveal" data-lenis-prevent="true">
+          <span className="text-[9px] font-mono font-black uppercase tracking-[0.4em] text-[#0A1A14]/40 mb-4 -rotate-90 origin-center whitespace-nowrap mt-10 shrink-0">Structures</span>
           
           {[
             { tag: 'IN', label: 'Intro' },
@@ -205,30 +227,50 @@ export default function LyricistStudio() {
             <button 
               key={i} 
               onClick={() => insertTag(block.tag)} 
-              className="w-12 h-12 md:w-16 md:h-16 shrink-0 rounded-[1rem] bg-white/[0.02] border border-white/10 hover:border-[#52B788]/60 hover:bg-[#52B788]/10 hover:text-[#52B788] text-[#888888] transition-all duration-300 flex flex-col items-center justify-center group active:scale-95 shadow-inner"
+              className="w-14 h-14 md:w-16 md:h-16 shrink-0 rounded-[1.5rem] bg-white border border-[#0A1A14]/5 hover:border-[#10B981] hover:bg-[#10B981] hover:text-white text-[#0A1A14]/60 transition-all duration-300 flex flex-col items-center justify-center group active:scale-95 shadow-sm hover:shadow-[0_10px_20px_rgba(16,185,129,0.2)]"
               title={`Insert ${block.label} Tag`}
             >
-               <span className="font-black text-xs md:text-sm">{block.tag}</span>
-               <span className="text-[6px] uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity mt-1">{block.label}</span>
+               <span className="font-black text-sm md:text-base group-hover:scale-110 transition-transform duration-300">{block.tag}</span>
+               <span className="text-[7px] uppercase tracking-[0.2em] font-bold opacity-0 group-hover:opacity-100 transition-opacity mt-1 absolute -bottom-4 text-[#10B981]">{block.label}</span>
             </button>
           ))}
         </div>
 
-        {/* 🔥 FIX: Textarea is now properly scrolling 🔥 */}
-        <div className="flex-1 bg-transparent p-6 md:p-12 lg:p-20 flex justify-center h-full relative z-10 overflow-hidden">
+        {/* 🔥 THE PREMIUM WRITER'S TEXTAREA 🔥 */}
+        <div className="flex-1 bg-transparent p-10 md:p-20 lg:p-32 flex justify-center h-full relative z-10 overflow-hidden studio-reveal">
           <textarea 
             ref={textareaRef} 
             value={lyricsText} 
             onChange={(e) => setLyricsText(e.target.value)}
             placeholder="Let the narrative flow..."
-            className="w-full max-w-4xl h-full bg-transparent border-none text-[#F0F0EB] font-mono text-xl md:text-2xl lg:text-3xl leading-[2.5] tracking-wide outline-none resize-none placeholder:text-[#888888]/20 focus:ring-0 overflow-y-auto custom-scrollbar pb-40"
+            className="w-full max-w-4xl h-full bg-transparent border-none text-[#0A1A14] font-serif italic text-2xl md:text-4xl lg:text-5xl leading-[2.2] tracking-normal outline-none resize-none placeholder:text-[#0A1A14]/15 focus:ring-0 overflow-y-auto custom-scrollbar pb-60"
             spellCheck="false" 
             autoFocus
             data-lenis-prevent="true"
           />
+          
+          {/* Subtle bottom fade to hide text cutting off abruptly */}
+          <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-[#F9F8F6] to-transparent pointer-events-none z-20"></div>
         </div>
       </div>
 
+      {/* Inject custom light scrollbar */}
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 8px !important;
+          display: block !important;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent !important;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(10,26,20,0.1) !important;
+          border-radius: 10px !important;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #10B981 !important;
+        }
+      `}</style>
     </div>
   );
 }

@@ -2,27 +2,54 @@ import React, { useEffect, useState } from 'react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
 
 export default function CustomCursor() {
-  const cursorX = useMotionValue(-100);
-  const cursorY = useMotionValue(-100);
-
   const [isHovering, setIsHovering] = useState(false);
   const [isClicking, setIsClicking] = useState(false);
 
-  // 💀 ULTRA SMOOTH PHYSICS
-  const springConfig = { damping: 30, stiffness: 500, mass: 0.2 };
-  const smoothX = useSpring(cursorX, springConfig);
-  const smoothY = useSpring(cursorY, springConfig);
+  // Raw Mouse Coordinates
+  const mouseX = useMotionValue(-100);
+  const mouseY = useMotionValue(-100);
+
+  // 🔥 SPLIT PHYSICS: Core is fast, Ring & Aura are slow (Trailing effect) 🔥
+  const smoothOptionsDot = { damping: 40, stiffness: 1000, mass: 0.1 }; // Almost instant
+  const smoothOptionsRing = { damping: 30, stiffness: 150, mass: 0.4 }; // Fluid drag
+  const smoothOptionsAura = { damping: 40, stiffness: 100, mass: 0.8 }; // Heavy fluid drag
+
+  const dotX = useSpring(mouseX, smoothOptionsDot);
+  const dotY = useSpring(mouseY, smoothOptionsDot);
+  
+  const ringX = useSpring(mouseX, smoothOptionsRing);
+  const ringY = useSpring(mouseY, smoothOptionsRing);
+
+  const auraX = useSpring(mouseX, smoothOptionsAura);
+  const auraY = useSpring(mouseY, smoothOptionsAura);
+
+  // 🔥 DYNAMIC ROLE THEME FOR THE AURA 🔥
+  const user = JSON.parse(sessionStorage.getItem('beatflow_user') || '{}');
+  const role = user.role?.toLowerCase() || 'listener';
+  
+  const getThemeColor = () => {
+    if (role === 'rapper') return '#E63946';    // Crimson
+    if (role === 'lyricist') return '#10B981';  // Emerald
+    if (role === 'producer') return '#D4AF37';  // Gold
+    if (role === 'admin') return '#800020';     // Executive Maroon
+    return '#2563EB';                           // Royal Blue
+  };
+  const themeColor = getThemeColor();
 
   useEffect(() => {
+    // Inject cursor-none globally to body to hide native cursor
+    document.body.style.cursor = 'none';
+
     const moveCursor = (e: MouseEvent) => {
-      cursorX.set(e.clientX);
-      cursorY.set(e.clientY);
+      // Performance optimization: Using x/y transforms instead of top/left
+      mouseX.set(e.clientX);
+      mouseY.set(e.clientY);
     };
 
     const handleMouseOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-
-      if (target.closest('button, a, input, [role="button"], .trending-card')) {
+      // Identify clickable elements (Links, Buttons, Inputs, or specific classes)
+      if (target.closest('button, a, input, textarea, [role="button"], .bento-card, .stagger-card, .group')) {
         setIsHovering(true);
       } else {
         setIsHovering(false);
@@ -38,81 +65,75 @@ export default function CustomCursor() {
     window.addEventListener('mouseup', handleMouseUp);
 
     return () => {
+      document.body.style.cursor = 'auto'; // Cleanup
       window.removeEventListener('mousemove', moveCursor);
       window.removeEventListener('mouseover', handleMouseOver);
       window.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [cursorX, cursorY]);
+  }, [mouseX, mouseY]);
 
   return (
     <>
-      {/* 🔥 MAIN DOT */}
+      {/* 🔮 LAYER 1: HEAVY TRAILING AURA (Colored Glow) */}
       <motion.div
-        className="fixed top-0 left-0 pointer-events-none z-[999999] rounded-full bg-white mix-blend-difference"
+        className="fixed top-0 left-0 pointer-events-none z-[999995] rounded-full blur-[40px] opacity-40 mix-blend-screen"
         style={{
-          left: smoothX,
-          top: smoothY,
-          x: '-50%',
-          y: '-50%',
+          x: auraX,
+          y: auraY,
+          translateX: '-50%',
+          translateY: '-50%',
+          backgroundColor: themeColor
         }}
         animate={{
-          width: isHovering ? 20 : 10,
-          height: isHovering ? 20 : 10,
-          scale: isClicking ? 0.7 : 1,
+          width: isHovering ? 0 : 150,
+          height: isHovering ? 0 : 150,
+          opacity: isHovering ? 0 : 0.15,
         }}
-        transition={{ duration: 0.2 }}
+        transition={{ duration: 0.5, ease: "circOut" }}
       />
 
-      {/* 💥 OUTER RING */}
+      {/* 💥 LAYER 2: FLUID TRAILING RING */}
       <motion.div
-        className="fixed top-0 left-0 pointer-events-none z-[999998] rounded-full border border-white/30"
+        className="fixed top-0 left-0 pointer-events-none z-[999997] rounded-full border border-[#111111]/30 shadow-sm"
         style={{
-          left: smoothX,
-          top: smoothY,
-          x: '-50%',
-          y: '-50%',
+          x: ringX,
+          y: ringY,
+          translateX: '-50%',
+          translateY: '-50%',
         }}
         animate={{
-          width: isHovering ? 80 : 30,
-          height: isHovering ? 80 : 30,
-          opacity: isHovering ? 0.6 : 0.3,
+          width: isHovering ? 0 : 40,
+          height: isHovering ? 0 : 40,
+          opacity: isHovering ? 0 : 1,
         }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.3, ease: "backOut" }}
       />
 
-      {/* ✨ GLOW EFFECT */}
+      {/* 🔥 LAYER 3: THE CORE LENS (Instant Tracking, Inverted Colors) */}
       <motion.div
-        className="fixed top-0 left-0 pointer-events-none z-[999997] rounded-full bg-emerald-500/20 blur-2xl"
+        className="fixed top-0 left-0 pointer-events-none z-[999999] rounded-full bg-white mix-blend-difference flex items-center justify-center overflow-hidden"
         style={{
-          left: smoothX,
-          top: smoothY,
-          x: '-50%',
-          y: '-50%',
+          x: dotX,
+          y: dotY,
+          translateX: '-50%',
+          translateY: '-50%',
         }}
         animate={{
-          width: isHovering ? 120 : 40,
-          height: isHovering ? 120 : 40,
-          opacity: isHovering ? 0.4 : 0.15,
+          width: isHovering ? 80 : 10,
+          height: isHovering ? 80 : 10,
+          scale: isClicking ? 0.8 : 1,
         }}
-        transition={{ duration: 0.4 }}
-      />
-
-      {/* 💣 CLICK RIPPLE */}
-      {isClicking && (
-        <motion.div
-          className="fixed top-0 left-0 pointer-events-none z-[999996] rounded-full border border-white"
-          style={{
-            left: smoothX,
-            top: smoothY,
-            x: '-50%',
-            y: '-50%',
-          }}
-          initial={{ width: 0, height: 0, opacity: 0.8 }}
-          animate={{ width: 100, height: 100, opacity: 0 }}
-          transition={{ duration: 0.6 }}
-        />
-      )}
+        transition={{ duration: 0.25, ease: "easeOut" }}
+      >
+        {/* Subtle dot inside the expanded lens to show exact click center */}
+        <motion.div 
+          className="w-1 h-1 bg-black rounded-full"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isHovering ? 0.5 : 0 }}
+          transition={{ duration: 0.2 }}
+        ></motion.div>
+      </motion.div>
     </>
   );
 }

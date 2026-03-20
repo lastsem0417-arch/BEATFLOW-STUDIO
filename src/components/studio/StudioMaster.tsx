@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import axios from 'axios';
+import gsap from 'gsap';
 import TopTransportBar from './TopTransportBar';
 import TimelineGrid from './TimelineGrid';
 import DAWBottomPanel from './DAWBottomPanel';
@@ -7,6 +8,7 @@ import DraggableWebcam from './DraggableWebcam';
 import LyricPad from './LyricPad';             
 
 export default function StudioMaster() {
+  const containerRef = useRef<HTMLDivElement>(null);
   const playheadRef = useRef<HTMLDivElement>(null);
   const timeDisplayRef = useRef<HTMLDivElement>(null);
   const liveRecordBlockRef = useRef<HTMLDivElement>(null); 
@@ -29,7 +31,7 @@ export default function StudioMaster() {
   const [tempProjectName, setTempProjectName] = useState("Untitled Project");
   const [currentProjectName, setCurrentProjectName] = useState("Untitled Project");
   
-  // 🔥 NEW: FEEDBACK STATE
+  // 🔥 FEEDBACK STATE
   const [producerNotes, setProducerNotes] = useState("");
 
   const [tracks, setTracks] = useState<any[]>([
@@ -73,7 +75,7 @@ export default function StudioMaster() {
     });
   }, [tracks]);
 
-  // --- THE DSP FX ENGINE ---
+  // --- THE DSP FX ENGINE (UNTOUCHED) ---
   useEffect(() => {
     if (isPlaying && !audioCtxRef.current) {
         audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -96,7 +98,6 @@ export default function StudioMaster() {
         source.disconnect();
         let outputNode: AudioNode = source;
 
-        // Apply FX Presets
         if (track.preset === 'bass') {
             const bassEQ = ctx.createBiquadFilter();
             bassEQ.type = 'lowshelf';
@@ -134,7 +135,7 @@ export default function StudioMaster() {
     });
   }, [tracks, isPlaying]);
 
-  // THE PLAYBACK SYNC
+  // THE PLAYBACK SYNC (UNTOUCHED)
   useEffect(() => {
     const updateEngine = (timestamp: number) => {
       if (!startTimeRef.current) startTimeRef.current = timestamp - (pausedTimeRef.current * 1000);
@@ -180,7 +181,7 @@ export default function StudioMaster() {
     return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
   }, [isPlaying, isRecording, tracks]);
 
-  // --- 🔥 EXPORT MIXDOWN LOGIC 🔥 ---
+  // --- 🔥 EXPORT MIXDOWN LOGIC (UNTOUCHED) 🔥 ---
   const handleExport = async () => {
     const activeAudios = tracks.filter(t => t.audioUrl && !t.isMuted);
     if (activeAudios.length === 0) {
@@ -259,7 +260,7 @@ export default function StudioMaster() {
     return new Blob([buffer], {type: "audio/wav"});
   }
 
-  // --- ACTIONS ---
+  // --- ACTIONS (UNTOUCHED) ---
   const togglePlay = () => {
     if (isPlaying) {
       setIsPlaying(false);
@@ -394,73 +395,86 @@ export default function StudioMaster() {
   const loadTrackFromLibrary = (url: string, title: string, type: string) => setTracks(tracks.map(t => t.id === activeTrackId ? { ...t, audioUrl: url, title: title, type: type, startTime: 0, trimStart: 0, duration: 20 } : t));
   const applyPreset = (presetId: string) => setTracks(tracks.map(t => t.id === activeTrackId ? { ...t, preset: presetId } : t));
 
+  // 🔥 GSAP ENTRANCE ANIMATION 🔥
+  useLayoutEffect(() => {
+    let ctx = gsap.context(() => {
+      gsap.fromTo(containerRef.current, 
+        { opacity: 0, scale: 0.98, filter: "blur(5px)" },
+        { opacity: 1, scale: 1, filter: "blur(0px)", duration: 1.2, ease: "power4.out" }
+      );
+    }, containerRef);
+    return () => ctx.revert();
+  }, []);
+
   return (
-    // 🔥 HIGH-END DARK STUDIO WRAPPER 🔥
-    <div className="h-screen w-full bg-[#030305] text-[#F0F0EB] flex flex-col font-sans overflow-hidden relative select-none">
+    // 🔥 HIGH-END VANTABLACK STUDIO WRAPPER (#080808 base) 🔥
+    <div ref={containerRef} className="h-screen w-full bg-[#080808] text-[#F4F3EF] flex flex-col font-sans overflow-hidden relative select-none">
       
-      {/* Subtle Studio Noise Overlay */}
-      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-[0.02] mix-blend-screen pointer-events-none z-0"></div>
+      {/* Subtle Studio Lighting (Deep Red Glow in top right) */}
+      <div className="absolute top-0 right-0 w-[40vw] h-[40vw] bg-[radial-gradient(circle_at_center,rgba(230,57,70,0.06)_0%,transparent_70%)] pointer-events-none z-0"></div>
+      {/* Analog Noise Overlay */}
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-[0.03] mix-blend-screen pointer-events-none z-0"></div>
 
       <DraggableWebcam />
       <LyricPad />
 
-      {/* 👑 PREMIUM PRODUCER FEEDBACK PANEL (Studio Terms) */}
+      {/* 👑 PREMIUM PRODUCER FEEDBACK PANEL (Gold touch in dark room) */}
       {producerNotes && (
-        <div className="absolute top-24 right-10 z-[100] w-80 animate-in slide-in-from-right duration-700">
-            <div className="bg-[#D4AF37]/5 border border-[#D4AF37]/30 backdrop-blur-3xl p-6 rounded-[1.5rem] shadow-[0_20px_50px_rgba(212,175,55,0.15)] relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/10 blur-[40px] rounded-full pointer-events-none"></div>
+        <div className="absolute top-28 right-10 z-[100] w-80 animate-in slide-in-from-right duration-700">
+            <div className="bg-[#121212]/80 backdrop-blur-3xl border border-[#D4AF37]/20 p-6 rounded-[1rem] shadow-[0_20px_50px_rgba(0,0,0,0.8)] relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 blur-[40px] rounded-full pointer-events-none"></div>
                 <div className="flex items-center gap-3 mb-4 relative z-10">
                     <div className="w-2 h-2 rounded-full bg-[#D4AF37] animate-pulse shadow-[0_0_10px_#D4AF37]"></div>
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#D4AF37]">Producer Notes</span>
+                    <span className="text-[9px] font-black uppercase tracking-[0.3em] text-[#D4AF37]">Producer Note</span>
                 </div>
-                <p className="text-[13px] text-[#F0F0EB] font-serif italic leading-relaxed relative z-10 border-l-2 border-[#D4AF37]/50 pl-4">"{producerNotes}"</p>
-                <button onClick={() => setProducerNotes("")} className="mt-5 text-[9px] font-mono uppercase tracking-[0.2em] text-[#888888] hover:text-[#F0F0EB] transition-colors relative z-10 border-b border-transparent hover:border-[#888888] pb-0.5">Dismiss Notes</button>
+                <p className="text-[13px] text-[#F4F3EF] font-serif italic leading-relaxed relative z-10 border-l-[2px] border-[#D4AF37]/50 pl-4">"{producerNotes}"</p>
+                <button onClick={() => setProducerNotes("")} className="mt-5 text-[9px] font-mono uppercase tracking-[0.2em] text-[#888888] hover:text-[#F4F3EF] transition-colors relative z-10">Dismiss</button>
             </div>
         </div>
       )}
 
       {/* 🎬 CINEMATIC SAVE/NEW MODAL (Studio Terms) */}
       {modalConfig.isOpen && (
-        <div className="absolute inset-0 z-[9999] bg-[#030305]/80 backdrop-blur-xl flex items-center justify-center animate-in fade-in duration-300">
-          <div className="bg-[#0A0A0C]/95 border border-white/10 p-10 rounded-[2rem] shadow-[0_30px_60px_rgba(0,0,0,0.8)] w-[450px] flex flex-col gap-6 relative overflow-hidden">
+        <div className="absolute inset-0 z-[9999] bg-[#080808]/90 backdrop-blur-xl flex items-center justify-center animate-in fade-in duration-300">
+          <div className="bg-[#121212] border border-white/5 p-10 rounded-[1.5rem] shadow-[0_40px_80px_rgba(0,0,0,1)] w-[450px] flex flex-col gap-6 relative overflow-hidden">
              
-             {/* Glow */}
-             <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 blur-[60px] rounded-full pointer-events-none ${modalConfig.type === 'save' ? 'bg-[#D4AF37]/10' : 'bg-[#E63946]/10'}`}></div>
+             {/* Dynamic Glow based on action */}
+             <div className={`absolute top-[-20%] left-1/2 -translate-x-1/2 w-40 h-40 blur-[80px] rounded-full pointer-events-none ${modalConfig.type === 'save' ? 'bg-[#D4AF37]/10' : 'bg-[#E63946]/15'}`}></div>
              
-             <h2 className="text-3xl font-serif italic text-[#F0F0EB] relative z-10">
-               {modalConfig.type === 'save' ? 'Save Studio Project' : 'New Studio Session?'}
+             <h2 className="text-3xl font-serif italic text-[#F4F3EF] relative z-10 tracking-tight">
+               {modalConfig.type === 'save' ? 'Save Session.' : 'Clear Booth?'}
              </h2>
              
              {modalConfig.type === 'save' ? (
                <div className="relative z-10">
-                 <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-[#888888] mb-3">Project Name</p>
+                 <p className="text-[9px] font-mono uppercase tracking-[0.3em] text-[#888888] mb-3">Project Title</p>
                  <input 
                    type="text" 
                    value={tempProjectName} 
                    onChange={(e) => setTempProjectName(e.target.value)} 
                    autoFocus 
-                   className="w-full bg-[#010101] border border-white/10 p-4 rounded-xl text-[#F0F0EB] outline-none focus:border-[#D4AF37] transition-all font-mono text-sm placeholder:text-[#888888]/50" 
+                   className="w-full bg-[#080808] border border-white/5 p-4 rounded-xl text-[#F4F3EF] outline-none focus:border-[#E63946]/50 transition-all font-mono text-sm placeholder:text-[#888888]/40 shadow-inner" 
                    placeholder="Name your track..." 
                  />
                </div>
              ) : (
                <p className="text-sm text-[#888888] font-light leading-relaxed relative z-10">
-                 Starting a new studio session will clear all unsaved vocal takes and beat layers. Are you sure?
+                 Starting a new session will wipe all unsaved vocal takes and beat layers from the console. Proceed?
                </p>
              )}
              
              <div className="flex justify-end gap-4 mt-6 relative z-10">
                 <button 
                   onClick={() => setModalConfig({ isOpen: false, type: 'save' })} 
-                  className="px-6 py-3 text-[#888888] hover:text-[#F0F0EB] text-[10px] uppercase tracking-[0.3em] font-black transition-colors"
+                  className="px-6 py-3 text-[#888888] hover:text-[#F4F3EF] text-[10px] uppercase tracking-[0.3em] font-black transition-colors"
                 >
                   Cancel
                 </button>
                 <button 
                   onClick={handleModalAction} 
-                  className={`px-8 py-3 text-[#010101] rounded-full text-[10px] uppercase tracking-[0.3em] font-black shadow-lg hover:scale-105 active:scale-95 transition-all ${modalConfig.type === 'save' ? 'bg-[#F0F0EB] hover:bg-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.2)]' : 'bg-[#E63946] text-white shadow-[0_0_20px_rgba(230,57,70,0.3)]'}`}
+                  className={`px-8 py-3 rounded-full text-[10px] uppercase tracking-[0.3em] font-black transition-all duration-300 ${modalConfig.type === 'save' ? 'bg-white text-[#080808] hover:bg-[#D4AF37] hover:text-white shadow-[0_10px_20px_rgba(255,255,255,0.1)]' : 'bg-[#E63946] text-white shadow-[0_10px_20px_rgba(230,57,70,0.3)] hover:bg-[#DC143C]'}`}
                 >
-                  {modalConfig.type === 'save' ? 'Save Project' : 'Clear Studio'}
+                  {modalConfig.type === 'save' ? 'Commit to Vault' : 'Purge Studio'}
                 </button>
              </div>
           </div>
@@ -471,25 +485,27 @@ export default function StudioMaster() {
         <audio key={track.id} ref={el => { if(el) audioRefs.current[track.id] = el }} src={track.audioUrl} crossOrigin="anonymous" onLoadedMetadata={(e:any) => { if(track.duration === 0 || track.duration === 20) updateTrack(track.id, 'duration', e.target.duration); }} />
       ))}
 
-      {/* 🔥 CHILD COMPONENTS 🔥 */}
-      <TopTransportBar 
-        isPlaying={isPlaying} isRecording={isRecording} togglePlay={togglePlay} stopEngine={stopEngine} toggleRecord={toggleRecord} 
-        onSaveProject={() => { setTempProjectName(currentProjectName); setModalConfig({ isOpen: true, type: 'save' }); }} 
-        onNewProject={() => setModalConfig({ isOpen: true, type: 'new' })} 
-        onExport={handleExport}
-        timeDisplayRef={timeDisplayRef} projectName={currentProjectName} 
-      />
+      {/* 🔥 THE CORE DAW COMPONENTS (PROPS UNTOUCHED) 🔥 */}
+      <div className="relative z-10 flex flex-col h-full w-full">
+          <TopTransportBar 
+            isPlaying={isPlaying} isRecording={isRecording} togglePlay={togglePlay} stopEngine={stopEngine} toggleRecord={toggleRecord} 
+            onSaveProject={() => { setTempProjectName(currentProjectName); setModalConfig({ isOpen: true, type: 'save' }); }} 
+            onNewProject={() => setModalConfig({ isOpen: true, type: 'new' })} 
+            onExport={handleExport}
+            timeDisplayRef={timeDisplayRef} projectName={currentProjectName} 
+          />
 
-      <TimelineGrid 
-        duration={duration} pixelsPerSecond={pixelsPerSecond} playheadRef={playheadRef} liveRecordBlockRef={liveRecordBlockRef}
-        onScrub={handleScrub} tracks={tracks} activeTrackId={activeTrackId} setActiveTrackId={setActiveTrackId} isRecording={isRecording} pausedTimeRef={pausedTimeRef}
-        onUpdateBlock={handleBlockUpdate} updateTrack={updateTrack} onAddTrack={addTrack} onDeleteTrack={deleteTrack}
-      />
+          <TimelineGrid 
+            duration={duration} pixelsPerSecond={pixelsPerSecond} playheadRef={playheadRef} liveRecordBlockRef={liveRecordBlockRef}
+            onScrub={handleScrub} tracks={tracks} activeTrackId={activeTrackId} setActiveTrackId={setActiveTrackId} isRecording={isRecording} pausedTimeRef={pausedTimeRef}
+            onUpdateBlock={handleBlockUpdate} updateTrack={updateTrack} onAddTrack={addTrack} onDeleteTrack={deleteTrack}
+          />
 
-      <DAWBottomPanel 
-        tracks={tracks} activeTrackId={activeTrackId} beats={libraryBeats} vault={vaultTracks} projects={savedProjects} 
-        onLoadTrack={loadTrackFromLibrary} onLoadProject={loadProject} onApplyPreset={applyPreset} 
-      />
+          <DAWBottomPanel 
+            tracks={tracks} activeTrackId={activeTrackId} beats={libraryBeats} vault={vaultTracks} projects={savedProjects} 
+            onLoadTrack={loadTrackFromLibrary} onLoadProject={loadProject} onApplyPreset={applyPreset} 
+          />
+      </div>
     </div>
   );
 }

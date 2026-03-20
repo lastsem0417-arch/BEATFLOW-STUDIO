@@ -16,11 +16,11 @@ export default function CreateDropModal({ onClose, onSuccess }: any) {
   });
   const [uploading, setUploading] = useState(false);
 
-  // 🔥 DYNAMIC ROLE COLORS 🔥
+  // 🔥 DYNAMIC ROLE THEME (Premium Colors) 🔥
   const getRoleTheme = () => {
-    if (role === 'rapper') return { color: '#E63946', tailwind: 'text-[#E63946]', border: 'border-[#E63946]', bg: 'bg-[#E63946]' };
-    if (role === 'lyricist') return { color: '#52B788', tailwind: 'text-[#52B788]', border: 'border-[#52B788]', bg: 'bg-[#52B788]' };
-    return { color: '#D4AF37', tailwind: 'text-[#D4AF37]', border: 'border-[#D4AF37]', bg: 'bg-[#D4AF37]' }; // Gold for Producer
+    if (role === 'rapper') return { hex: '#E63946', shadow: 'rgba(230,57,70,0.3)' }; // Crimson
+    if (role === 'lyricist') return { hex: '#10B981', shadow: 'rgba(16,185,129,0.3)' }; // Emerald
+    return { hex: '#D4AF37', shadow: 'rgba(212,175,55,0.3)' }; // Gold for Producer
   };
   const theme = getRoleTheme();
 
@@ -69,33 +69,38 @@ export default function CreateDropModal({ onClose, onSuccess }: any) {
   };
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 font-sans select-none overflow-hidden">
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-8 font-sans select-none overflow-hidden text-[#111111]">
       
-      {/* 🌑 Lighter Frosted Glass Background (Not pure black) */}
+      {/* 🌫️ Premium Frosted Backdrop */}
       <div 
-        className="absolute inset-0 bg-[#030305]/60 backdrop-blur-2xl animate-in fade-in duration-500"
+        className="absolute inset-0 bg-[#111111]/40 backdrop-blur-md animate-in fade-in duration-500 transition-opacity"
         onClick={uploading ? undefined : onClose}
       ></div>
 
-      <div className="w-full max-w-2xl bg-[#010101]/80 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.8)] animate-in zoom-in-95 fade-in duration-500">
+      {/* 📝 THE LUXURY MODAL */}
+      <div className="w-full max-w-2xl bg-white border border-[#111111]/5 rounded-[3rem] p-10 md:p-14 relative overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.2)] animate-in zoom-in-[0.98] slide-in-from-bottom-8 fade-in duration-700 ease-[cubic-bezier(0.76,0,0.24,1)]">
         
         {/* Dynamic Ambient Glow inside the modal */}
-        <div className="absolute top-0 right-0 w-80 h-80 blur-[100px] rounded-full pointer-events-none -z-10 opacity-10 transition-colors duration-500" style={{ backgroundColor: theme.color }}></div>
+        <div 
+          className="absolute top-[-20%] right-[-10%] w-96 h-96 blur-[100px] rounded-full pointer-events-none -z-10 opacity-15 transition-colors duration-1000" 
+          style={{ backgroundColor: theme.hex }}
+        ></div>
 
         {/* ✕ Close Button */}
         <button 
           onClick={onClose} 
           disabled={uploading}
-          className="absolute top-8 right-8 w-10 h-10 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-[#888888] hover:text-[#F0F0EB] hover:bg-white/10 transition-all duration-300 active:scale-95 disabled:opacity-50 group"
+          className="absolute top-10 right-10 w-12 h-12 rounded-full border border-[#111111]/10 bg-[#F4F5F7] flex items-center justify-center text-[#111111]/40 hover:text-[#E63946] hover:bg-white hover:border-[#E63946]/30 hover:shadow-sm transition-all duration-300 active:scale-95 disabled:opacity-50 group z-20"
+          title="Close Form"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:rotate-90 transition-transform duration-500"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
 
-        {/* 🎩 Header */}
-        <div className="mb-10 pr-12">
-          <h2 className="text-4xl font-serif italic text-[#F0F0EB] leading-tight tracking-tight mb-2">Publish Asset</h2>
-          <p className="text-[10px] uppercase tracking-[0.4em] font-black flex items-center gap-2 font-mono" style={{ color: theme.color }}>
-            <span className="w-1.5 h-1.5 rounded-full animate-pulse shadow-lg" style={{ backgroundColor: theme.color, boxShadow: `0 0 10px ${theme.color}` }}></span>
+        {/* 🎩 Editorial Header */}
+        <div className="mb-12 pr-12 relative z-10">
+          <h2 className="text-4xl md:text-5xl font-serif italic text-[#111111] leading-tight tracking-tight mb-3">Publish Asset</h2>
+          <p className="text-[9px] uppercase tracking-[0.4em] font-black flex items-center gap-2 font-mono text-[#111111]/50">
+            <span className="w-1.5 h-1.5 rounded-full animate-pulse shadow-sm" style={{ backgroundColor: theme.hex, boxShadow: `0 0 10px ${theme.hex}` }}></span>
             Broadcast to Network
           </p>
         </div>
@@ -104,7 +109,7 @@ export default function CreateDropModal({ onClose, onSuccess }: any) {
           
           {/* 🎵 FILE UPLOAD FOR PRODUCERS/RAPPERS */}
           {role !== 'lyricist' && (
-            <div className="relative group cursor-pointer">
+            <div className="relative group cursor-pointer mb-2">
               <input 
                 type="file" accept="audio/*" 
                 onChange={(e) => setFile(e.target.files?.[0] || null)}
@@ -112,17 +117,17 @@ export default function CreateDropModal({ onClose, onSuccess }: any) {
                 disabled={uploading}
               />
               <div 
-                className="p-8 border-2 border-dashed border-white/10 rounded-[1.5rem] bg-white/[0.02] text-center transition-all duration-300 group-hover:bg-white/[0.05]"
-                style={{ borderColor: file ? theme.color : 'rgba(255,255,255,0.1)' }}
+                className="p-10 border-2 border-dashed rounded-[2rem] bg-[#F4F5F7]/50 text-center transition-all duration-500 group-hover:bg-[#F4F5F7]"
+                style={{ borderColor: file ? theme.hex : 'rgba(17,17,17,0.1)' }}
               >
-                <div className="flex justify-center mb-4 text-[#888888] group-hover:text-white transition-colors" style={{ color: file ? theme.color : undefined }}>
+                <div className="flex justify-center mb-4 transition-transform duration-500 group-hover:-translate-y-1" style={{ color: file ? theme.hex : 'rgba(17,17,17,0.3)' }}>
                   {file ? (
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="14 2 18 6 7 17 3 17 3 13 14 2"></polygon><line x1="3" y1="22" x2="21" y2="22"></line></svg>
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polygon points="14 2 18 6 7 17 3 17 3 13 14 2"></polygon><line x1="3" y1="22" x2="21" y2="22"></line></svg>
                   ) : (
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                   )}
                 </div>
-                <p className="text-[10px] text-[#888888] uppercase tracking-[0.2em] font-mono transition-colors" style={{ color: file ? '#F0F0EB' : undefined }}>
+                <p className="text-[10px] text-[#111111]/40 uppercase tracking-[0.2em] font-mono font-bold transition-colors" style={{ color: file ? '#111111' : undefined }}>
                   {file ? file.name : 'Select Audio Transmission (.mp3, .wav)'}
                 </p>
               </div>
@@ -131,17 +136,16 @@ export default function CreateDropModal({ onClose, onSuccess }: any) {
 
           {/* 📝 LYRICS BOX FOR LYRICISTS */}
           {role === 'lyricist' && (
-            <div className="relative group">
-              <span className="absolute top-3 right-4 text-[8px] uppercase tracking-widest font-black font-mono opacity-50" style={{ color: theme.color }}>Draft</span>
+            <div className="relative group mb-2">
+              <span className="absolute top-4 right-5 text-[8px] uppercase tracking-widest font-black font-mono opacity-60" style={{ color: theme.hex }}>Draft</span>
               <textarea 
                 required
                 placeholder="Paste your lyrical composition here..."
-                className="w-full bg-[#0A0A0C] border border-white/10 rounded-[1.5rem] px-6 py-5 text-sm text-[#F0F0EB] font-mono h-40 outline-none transition-all resize-none shadow-inner placeholder:text-[#888888]/40"
-                style={{ ':focus': { borderColor: theme.color } } as any} // using styled trick for dynamic focus
+                className="w-full bg-[#F4F5F7] border border-[#111111]/10 rounded-[2rem] px-8 py-6 text-sm text-[#111111] font-serif italic h-40 outline-none transition-all duration-500 resize-none shadow-inner placeholder:text-[#111111]/30 focus:bg-white"
                 onChange={(e) => setFormData({...formData, lyricsText: e.target.value})}
                 disabled={uploading}
-                onFocus={(e) => e.target.style.borderColor = theme.color}
-                onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                onFocus={(e) => { e.target.style.borderColor = theme.hex; e.target.style.boxShadow = `0 0 0 4px ${theme.hex}15`; }}
+                onBlur={(e) => { e.target.style.borderColor = 'rgba(17,17,17,0.1)'; e.target.style.boxShadow = 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)'; }}
               />
             </div>
           )}
@@ -150,39 +154,39 @@ export default function CreateDropModal({ onClose, onSuccess }: any) {
           <div className="space-y-5">
             <input 
               type="text" required placeholder="Asset Title" 
-              className="w-full bg-[#0A0A0C] border border-white/10 rounded-xl px-5 py-4 text-sm text-[#F0F0EB] font-mono outline-none transition-all shadow-inner placeholder:text-[#888888]/40" 
+              className="w-full bg-[#F4F5F7] border border-[#111111]/10 rounded-[1.2rem] px-6 py-4 text-sm text-[#111111] font-medium outline-none transition-all duration-300 shadow-inner placeholder:text-[#111111]/40 focus:bg-white" 
               onChange={(e) => setFormData({...formData, title: e.target.value})} 
               disabled={uploading}
-              onFocus={(e) => e.target.style.borderColor = theme.color}
-              onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+              onFocus={(e) => { e.target.style.borderColor = theme.hex; }}
+              onBlur={(e) => { e.target.style.borderColor = 'rgba(17,17,17,0.1)'; }}
             />
             
             <textarea 
               required
               placeholder="Describe the sonic vision... (Required)"
-              className="w-full bg-[#0A0A0C] border border-white/10 rounded-xl px-5 py-4 text-sm text-[#F0F0EB] font-mono h-24 outline-none resize-none transition-all shadow-inner placeholder:text-[#888888]/40" 
+              className="w-full bg-[#F4F5F7] border border-[#111111]/10 rounded-[1.2rem] px-6 py-4 text-sm text-[#111111] font-medium h-24 outline-none resize-none transition-all duration-300 shadow-inner placeholder:text-[#111111]/40 focus:bg-white custom-scrollbar" 
               onChange={(e) => setFormData({...formData, description: e.target.value})}
               disabled={uploading}
-              onFocus={(e) => e.target.style.borderColor = theme.color}
-              onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+              onFocus={(e) => { e.target.style.borderColor = theme.hex; }}
+              onBlur={(e) => { e.target.style.borderColor = 'rgba(17,17,17,0.1)'; }}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-5">
               <input 
                 type="text" placeholder="Genre (e.g. Trap)" 
-                className="bg-[#0A0A0C] border border-white/10 rounded-xl px-5 py-4 text-sm text-[#F0F0EB] font-mono outline-none transition-all shadow-inner placeholder:text-[#888888]/40" 
+                className="bg-[#F4F5F7] border border-[#111111]/10 rounded-[1.2rem] px-6 py-4 text-sm text-[#111111] font-medium outline-none transition-all duration-300 shadow-inner placeholder:text-[#111111]/40 focus:bg-white" 
                 onChange={(e) => setFormData({...formData, genre: e.target.value})} 
                 disabled={uploading}
-                onFocus={(e) => e.target.style.borderColor = theme.color}
-                onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                onFocus={(e) => { e.target.style.borderColor = theme.hex; }}
+                onBlur={(e) => { e.target.style.borderColor = 'rgba(17,17,17,0.1)'; }}
               />
               <input 
                 type="text" placeholder="Looking For (e.g. Rapper)" 
-                className="bg-[#0A0A0C] border border-white/10 rounded-xl px-5 py-4 text-sm text-[#F0F0EB] font-mono outline-none transition-all shadow-inner placeholder:text-[#888888]/40" 
+                className="bg-[#F4F5F7] border border-[#111111]/10 rounded-[1.2rem] px-6 py-4 text-sm text-[#111111] font-medium outline-none transition-all duration-300 shadow-inner placeholder:text-[#111111]/40 focus:bg-white" 
                 onChange={(e) => setFormData({...formData, lookingFor: e.target.value})} 
                 disabled={uploading}
-                onFocus={(e) => e.target.style.borderColor = theme.color}
-                onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                onFocus={(e) => { e.target.style.borderColor = theme.hex; }}
+                onBlur={(e) => { e.target.style.borderColor = 'rgba(17,17,17,0.1)'; }}
               />
             </div>
           </div>
@@ -191,30 +195,35 @@ export default function CreateDropModal({ onClose, onSuccess }: any) {
           <button 
             type="submit"
             disabled={uploading}
-            className="w-full mt-4 py-4 rounded-full font-black uppercase tracking-[0.3em] text-[10px] transition-all duration-500 flex items-center justify-center gap-3 relative overflow-hidden group active:scale-95 disabled:opacity-50 disabled:scale-100"
+            className="w-full mt-6 py-5 rounded-full font-black uppercase tracking-[0.4em] text-[10px] transition-all duration-500 flex items-center justify-center gap-3 relative overflow-hidden group active:scale-95 disabled:opacity-70 disabled:scale-100"
             style={{ 
-              backgroundColor: uploading ? 'transparent' : `${theme.color}15`, 
-              color: theme.color,
-              borderColor: uploading ? 'rgba(255,255,255,0.1)' : `${theme.color}40`,
-              borderWidth: '1px'
+              backgroundColor: uploading ? '#F4F5F7' : theme.hex, 
+              color: uploading ? '#111111' : 'white',
+              boxShadow: uploading ? 'none' : `0 15px 30px ${theme.shadow}`
             }}
-            onMouseEnter={(e) => { if(!uploading) { e.currentTarget.style.backgroundColor = theme.color; e.currentTarget.style.color = '#010101'; } }}
-            onMouseLeave={(e) => { if(!uploading) { e.currentTarget.style.backgroundColor = `${theme.color}15`; e.currentTarget.style.color = theme.color; } }}
           >
             {uploading ? (
               <>
-                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-spin text-[#888888]"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-                 <span className="text-[#888888]">Transmitting Payload...</span>
+                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="animate-spin text-[#111111]/50"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                 <span className="text-[#111111]/50">Encrypting & Transmitting...</span>
               </>
             ) : (
               <>
                  Publish Asset 
-                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
               </>
             )}
           </button>
 
         </form>
+
+        {/* Custom Scrollbar for Textareas */}
+        <style>{`
+          .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+          .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+          .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(17,17,17,0.1); border-radius: 10px; }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(17,17,17,0.3); }
+        `}</style>
       </div>
     </div>
   );

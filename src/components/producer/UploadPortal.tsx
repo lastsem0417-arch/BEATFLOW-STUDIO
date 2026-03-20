@@ -41,7 +41,7 @@ export default function UploadPortal({ onUploadSuccess }: { onUploadSuccess: () 
           setUploadStatus('idle');
           setProgress(0);
           onUploadSuccess();
-      }, 2000); // 2 second ka cinematic delay before refreshing table
+      }, 2000); 
 
     } catch (err) {
       console.error("Upload Error:", err);
@@ -77,36 +77,39 @@ export default function UploadPortal({ onUploadSuccess }: { onUploadSuccess: () 
   };
 
   return (
+    // 🔥 PREMIUM EDITORIAL UPLOAD TERMINAL
     <div 
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
-      className={`relative bg-brand-dark border rounded-[2rem] p-12 lg:p-20 flex flex-col items-center justify-center overflow-hidden transition-all duration-500 shadow-[0_20px_50px_rgba(0,0,0,0.5)] ${isDragging ? 'border-producer/50 bg-producer/5 scale-[1.02]' : 'border-white/5 hover:border-producer/30'}`}
+      className={`relative w-full rounded-[1.5rem] p-12 lg:p-20 flex flex-col items-center justify-center overflow-hidden transition-all duration-500 font-sans ${isDragging ? 'bg-[#D4AF37]/5 border-2 border-[#D4AF37] shadow-[0_20px_60px_rgba(212,175,55,0.15)] scale-[0.99]' : 'bg-[#F4F3EF]/50 border border-dashed border-[#001433]/20 hover:border-solid hover:border-[#D4AF37]/50 hover:bg-[#D4AF37]/5 hover:shadow-[0_15px_40px_rgba(0,20,51,0.05)]'}`}
     >
       
-      {/* 🌌 AMBIENT UPLOAD GLOW */}
-      <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-producer/10 blur-[100px] rounded-full pointer-events-none transition-all duration-700 ${isDragging || uploadStatus === 'uploading' ? 'opacity-100 scale-150' : 'opacity-0'}`}></div>
-      <div className={`absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10 mix-blend-screen pointer-events-none z-0 transition-opacity ${uploadStatus === 'uploading' ? 'animate-pulse' : ''}`}></div>
+      {/* Background soft glow on hover */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-white blur-[80px] rounded-full pointer-events-none opacity-50"></div>
 
       {uploadStatus === 'idle' && (
         <div 
-            className="flex flex-col items-center cursor-pointer relative z-10 w-full"
+            className="flex flex-col items-center cursor-pointer relative z-10 w-full group"
             onClick={() => fileInputRef.current?.click()}
         >
-          <div className={`w-20 h-20 rounded-full flex items-center justify-center border transition-all duration-500 ${isDragging ? 'bg-producer text-black border-producer shadow-[0_0_30px_rgba(212,175,55,0.4)] scale-110' : 'bg-[#010101] text-brand-pearl border-white/10 group-hover:border-producer/50 group-hover:text-producer'}`}>
-             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          {/* Elegant Upload Icon Box */}
+          <div className={`w-24 h-24 rounded-full flex items-center justify-center transition-all duration-500 border ${isDragging ? 'bg-[#D4AF37] border-[#D4AF37] text-white shadow-[0_10px_30px_rgba(212,175,55,0.4)]' : 'bg-white border-[#001433]/10 text-[#001433] group-hover:bg-[#001433] group-hover:text-white shadow-sm group-hover:shadow-[0_15px_40px_rgba(0,20,51,0.2)]'}`}>
+             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
           </div>
           
-          <h3 className="mt-8 text-2xl font-serif italic tracking-wide text-brand-pearl transition-colors duration-300">
-             {isDragging ? <span className="text-producer">Drop the masterpiece</span> : 'Deploy Audio Asset'}
+          <h3 className="mt-8 text-3xl md:text-4xl font-serif italic text-[#001433] leading-none transition-colors duration-300 text-center tracking-tight">
+             {isDragging ? <span className="text-[#D4AF37]">Release to Deploy</span> : 'Deploy Audio Asset'}
           </h3>
-          <p className="mt-3 text-[9px] text-brand-muted uppercase tracking-[0.4em] font-mono">
-            Drag & Drop or <span className="text-producer underline decoration-producer/30 underline-offset-4 cursor-pointer ml-1">Browse</span>
+          
+          <p className="mt-4 text-[10px] text-[#001433]/60 font-black uppercase tracking-[0.3em] font-mono flex items-center gap-2">
+            Drag & Drop or <span className="bg-[#001433] text-white px-3 py-1.5 rounded-full hover:bg-[#D4AF37] transition-colors ml-1 shadow-sm">Browse</span>
           </p>
-          <div className="mt-6 flex items-center gap-4 text-[8px] text-brand-muted/70 font-mono uppercase tracking-widest">
-             <span className="px-2 py-1 border border-white/5 rounded-md bg-white/5">WAV</span>
-             <span className="px-2 py-1 border border-white/5 rounded-md bg-white/5">MP3</span>
-             <span className="px-2 py-1 border border-white/5 rounded-md bg-white/5">MAX 20MB</span>
+          
+          <div className="mt-10 flex items-center gap-4 text-[9px] text-[#001433]/50 font-black font-mono uppercase tracking-[0.2em]">
+             <span className="px-4 py-2 border border-[#001433]/10 rounded-full bg-white shadow-sm">WAV</span>
+             <span className="px-4 py-2 border border-[#001433]/10 rounded-full bg-white shadow-sm">MP3</span>
+             <span className="px-4 py-2 border border-[#D4AF37]/30 text-[#D4AF37] rounded-full bg-[#D4AF37]/5 shadow-sm">MAX 20MB</span>
           </div>
 
           <input 
@@ -119,38 +122,43 @@ export default function UploadPortal({ onUploadSuccess }: { onUploadSuccess: () 
         </div>
       )}
 
+      {/* ⏳ EDITORIAL UPLOADING STATE */}
       {uploadStatus === 'uploading' && (
         <div className="flex flex-col items-center relative z-10 w-full max-w-md animate-in fade-in duration-500">
-          <div className="w-16 h-16 rounded-full border border-producer/20 flex items-center justify-center mb-6 relative">
-             <div className="absolute inset-0 rounded-full border border-producer/40 animate-[ping_2s_infinite]"></div>
-             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-producer animate-pulse"><polyline points="16 16 12 12 8 16"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"></path><polyline points="16 16 12 12 8 16"></polyline></svg>
-          </div>
-          <h3 className="text-lg font-serif italic text-producer mb-2">Transmitting to Cloud...</h3>
-          <div className="text-[12px] font-mono text-brand-pearl mb-6 uppercase tracking-[0.3em]">{progress}%</div>
           
-          <div className="w-full h-[2px] bg-white/10 rounded-full overflow-hidden">
-            <div className="h-full bg-producer shadow-[0_0_15px_#D4AF37] transition-all duration-300 ease-out" style={{ width: `${progress}%` }}></div>
+          <div className="flex justify-between items-end w-full mb-6 pb-4 border-b border-[#001433]/10">
+             <h3 className="text-2xl font-serif italic text-[#001433] m-0">Transmitting...</h3>
+             <span className="text-2xl font-light font-mono text-[#D4AF37] tracking-tighter">{progress}%</span>
           </div>
+          
+          {/* Sleek Progress Bar */}
+          <div className="w-full h-3 bg-[#001433]/5 rounded-full overflow-hidden shadow-inner">
+            <div className="h-full bg-[#D4AF37] transition-all duration-300 ease-out" style={{ width: `${progress}%` }}></div>
+          </div>
+          
+          <span className="mt-8 text-[9px] text-[#001433]/60 font-bold font-mono uppercase tracking-[0.3em] bg-white px-4 py-2 rounded-full shadow-sm border border-[#001433]/5">Encrypting & Uploading</span>
         </div>
       )}
 
+      {/* ✅ SUCCESS STATE */}
       {uploadStatus === 'success' && (
         <div className="flex flex-col items-center relative z-10 w-full animate-in zoom-in-95 duration-500">
-           <div className="w-20 h-20 rounded-full bg-producer/10 border border-producer/30 flex items-center justify-center mb-6 text-producer shadow-[0_0_40px_rgba(212,175,55,0.2)]">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+           <div className="w-24 h-24 bg-[#D4AF37] rounded-full flex items-center justify-center mb-6 text-white shadow-[0_15px_40px_rgba(212,175,55,0.4)]">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
            </div>
-           <h3 className="text-3xl font-serif italic text-brand-pearl">Asset Forged.</h3>
-           <p className="mt-2 text-[10px] text-brand-muted uppercase tracking-[0.4em] font-mono">Vault Synchronized Successfully</p>
+           <h3 className="text-4xl md:text-5xl font-serif italic text-[#001433] leading-none text-center">Asset Forged.</h3>
+           <p className="mt-6 text-[10px] text-[#D4AF37] uppercase tracking-[0.3em] font-black bg-[#D4AF37]/10 rounded-full px-5 py-2.5">Vault Synchronized Successfully</p>
         </div>
       )}
 
+      {/* ❌ ERROR STATE */}
       {uploadStatus === 'error' && (
         <div className="flex flex-col items-center relative z-10 w-full animate-in shake duration-500">
-           <div className="w-20 h-20 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center mb-6 text-red-500 shadow-[0_0_40px_rgba(239,68,68,0.2)]">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+           <div className="w-24 h-24 bg-[#E63946] rounded-full flex items-center justify-center mb-6 text-white shadow-[0_15px_40px_rgba(230,57,70,0.3)]">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
            </div>
-           <h3 className="text-3xl font-serif italic text-brand-pearl">Transmission Failed.</h3>
-           <p className="mt-2 text-[10px] text-red-500/70 uppercase tracking-[0.4em] font-mono">Invalid Format or Server Error</p>
+           <h3 className="text-4xl md:text-5xl font-serif italic text-[#001433] leading-none text-center">Transmission Failed.</h3>
+           <p className="mt-6 text-[10px] text-[#E63946] bg-[#E63946]/10 rounded-full uppercase tracking-[0.3em] font-black px-5 py-2.5">Invalid Format or Server Error</p>
         </div>
       )}
 

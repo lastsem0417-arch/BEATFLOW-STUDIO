@@ -1,12 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 
 // --- AUTH & CONTEXT IMPORTS ---
 import { AuthProvider } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
-
-// 🔥 AUDIO CONTEXT IMPORT
 import { AudioProvider } from './context/AudioContext'; 
 
 // --- COMPONENTS ---
@@ -27,8 +25,9 @@ import ListenerMaster from './components/ListenerMaster';
 import AdminLogin from './components/AdminLogin';
 import AdminMaster from './components/AdminMaster';
 
-// 🔥 GLOBAL AUDIO PLAYER IMPORT
+// 🔥 GLOBAL AUDIO PLAYER & PRELOADER
 import GlobalAudioPlayer from './components/GlobalAudioPlayer'; 
+import CinematicPreloader from './components/CinematicPreloader'; // 👈 THE GATEWAY ADDED
 
 // 🌟 THE PREMIUM MOTION ENGINE IMPORTS 🌟
 import SmoothScroll from './components/SmoothScroll';
@@ -121,19 +120,30 @@ const PageTransition = ({ children }: { children: React.ReactNode }) => {
    🚀 MAIN APP ENTRY POINT
    ============================================================================== */
 function App() {
+  // 🔥 THE BULLETPROOF FIX: Check session synchronously before rendering 🔥
+  // Isse refresh par baar-baar preloader nahi aayega!
+  const [showPreloader, setShowPreloader] = useState(() => {
+    return sessionStorage.getItem('beatflow_preloader_done') !== 'true';
+  });
+
   return (
     <AuthProvider>
       <AudioProvider>
         <SmoothScroll>
+          
+          {/* 🎬 Render Preloader only if it's the user's first time in this session */}
+          {showPreloader && <CinematicPreloader onComplete={() => setShowPreloader(false)} />}
+
           {/* Router is pushed out so useLocation works inside AnimatedRoutes */}
           <Router>
             <CustomCursor />
 
-            {/* 🔥 PREMIUM COLOR BASE APPLIED HERE 🔥
-              bg-[#030305] -> Deep Luxurious Charcoal/Navy
-              selection:bg-[#FFD700] -> Highlighting text turns it Gold
+            {/* 🔥 PREMIUM GRAPHITE BASE APPLIED HERE 🔥
+              bg-[#111111] -> Deep Graphite Gray
+              text-[#F4F5F7] -> Soft Alabaster White
+              selection:bg-[#F4F5F7] selection:text-[#111111] -> Silver/White text highlight
             */}
-            <main className="relative min-h-screen w-full bg-[#030305] text-[#ebebe6] overflow-hidden font-sans cursor-none selection:bg-[#FFD700] selection:text-black">
+            <main className="relative min-h-screen w-full bg-[#111111] text-[#F4F5F7] overflow-hidden font-sans cursor-none selection:bg-[#F4F5F7] selection:text-[#111111]">
               
               <AnimatedRoutes />
 

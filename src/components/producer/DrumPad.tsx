@@ -1,4 +1,5 @@
-import React, { useEffect, useCallback, useRef } from 'react';
+import React, { useEffect, useCallback, useRef, useLayoutEffect } from 'react';
+import gsap from 'gsap';
 
 const SAMPLES = [
   { key: '1', name: 'KICK', url: '/sounds/kick.mp3' },
@@ -10,6 +11,7 @@ const SAMPLES = [
 ];
 
 export default function DrumPad() {
+  const containerRef = useRef<HTMLDivElement>(null);
   const audioContext = useRef<AudioContext | null>(null);
   const bufferCache = useRef<{ [key: string]: AudioBuffer }>({});
 
@@ -19,7 +21,7 @@ export default function DrumPad() {
     }
   };
 
-  // 🔥 THE FALLBACK SYNTH ENGINE (Agar MP3 missing ho toh ye aawaz nikalega)
+  // 🔥 THE FALLBACK SYNTH ENGINE
   const playFallbackSynth = (name: string, ctx: AudioContext) => {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -54,12 +56,17 @@ export default function DrumPad() {
     initAudio();
     if (!audioContext.current) return;
 
-    // 🔥 PREMIUM VISUAL ANIMATION (Gold Press Effect)
+    // 🔥 PREMIUM TACTILE HARDWARE PHYSICS
     const el = document.getElementById(`pad-${id}`);
     if (el) {
-      // Scale down and add gold glow on press
-      el.classList.add('scale-[0.92]', 'bg-producer/20', 'border-producer/80', 'shadow-[0_0_30px_rgba(212,175,55,0.4)]');
-      setTimeout(() => el.classList.remove('scale-[0.92]', 'bg-producer/20', 'border-producer/80', 'shadow-[0_0_30px_rgba(212,175,55,0.4)]'), 150);
+      // Hardware button press effect: scale down, turn gold
+      el.classList.add('scale-[0.92]', 'bg-[#D4AF37]', 'text-white', 'shadow-[0_0_20px_rgba(212,175,55,0.4)]');
+      el.classList.remove('bg-[#F4F3EF]', 'hover:bg-[#001433]', 'hover:text-[#D4AF37]');
+      
+      setTimeout(() => {
+        el.classList.remove('scale-[0.92]', 'bg-[#D4AF37]', 'text-white', 'shadow-[0_0_20px_rgba(212,175,55,0.4)]');
+        el.classList.add('bg-[#F4F3EF]', 'hover:bg-[#001433]', 'hover:text-[#D4AF37]');
+      }, 100); // Super snappy 100ms recoil
     }
 
     try {
@@ -84,7 +91,6 @@ export default function DrumPad() {
       
     } catch (err) {
       console.warn(`File missing for ${name}. Activating Fallback Synth.`);
-      // Agar gaana nahi mila, toh custom generator chalega!
       playFallbackSynth(name, audioContext.current);
     }
   };
@@ -92,7 +98,7 @@ export default function DrumPad() {
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     const sample = SAMPLES.find(s => s.key === e.key);
     if (sample) {
-      e.preventDefault(); // Rok browser scrolling
+      e.preventDefault(); 
       playSound(sample.url, sample.key, sample.name);
     }
   }, []);
@@ -102,48 +108,60 @@ export default function DrumPad() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
-  return (
-    <div className="bg-brand-dark border border-white/5 rounded-[2rem] p-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] h-full flex flex-col select-none relative overflow-hidden group">
-      
-      {/* Ambient Inner Glow */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-producer/5 blur-[50px] rounded-full pointer-events-none"></div>
+  // 🎬 GSAP PREMIUM GRID REVEAL
+  useLayoutEffect(() => {
+    let ctx = gsap.context(() => {
+      gsap.fromTo(".drum-pad-btn", 
+        { scale: 0.9, opacity: 0, y: 20 },
+        { scale: 1, opacity: 1, y: 0, duration: 0.8, stagger: 0.05, ease: "back.out(1.5)" }
+      );
+    }, containerRef);
+    return () => ctx.revert();
+  }, []);
 
-      {/* 🎩 HEADER SECTION */}
-      <div className="flex justify-between items-start mb-10 relative z-10">
-        <div className="flex flex-col gap-1">
-          <h3 className="text-[10px] uppercase tracking-[0.5em] font-black text-producer">MPC Forge</h3>
-          <span className="text-[10px] text-brand-muted uppercase tracking-[0.2em] font-mono">Analog Synth Engine</span>
+  return (
+    // 🔥 PREMIUM EDITORIAL CONTAINER
+    <div ref={containerRef} className="bg-white rounded-[1rem] border border-[#001433]/5 p-6 lg:p-8 shadow-[0_10px_30px_rgba(0,0,0,0.03)] h-full flex flex-col select-none relative font-sans">
+      
+      {/* 🎩 EDITORIAL HEADER SECTION */}
+      <div className="flex justify-between items-start border-b border-[#001433]/10 pb-6 mb-8 relative z-10">
+        <div className="flex flex-col">
+          <h3 className="text-2xl md:text-3xl font-black uppercase tracking-tighter text-[#001433] leading-none">MPC FORGE</h3>
+          <span className="text-[10px] text-[#001433]/50 font-bold uppercase tracking-[0.3em] font-mono mt-2">Analog Engine</span>
         </div>
-        <div className="px-3 py-1.5 bg-[#010101] rounded-full flex items-center gap-2 text-[9px] text-producer font-mono tracking-widest border border-white/5 shadow-inner">
-          <span className="w-1.5 h-1.5 bg-producer rounded-full animate-pulse shadow-[0_0_5px_#D4AF37]"></span>
+        
+        {/* Hardware Status Indicator */}
+        <div className="px-4 py-2 bg-[#F4F3EF] rounded-full flex items-center gap-2 text-[9px] text-[#001433]/60 font-black uppercase tracking-widest shadow-inner">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-pulse shadow-[0_0_5px_#D4AF37]"></span>
           2MS
         </div>
       </div>
 
-      {/* 🎛️ THE DRUM PADS (Breathing Room & Sleek Layout) */}
-      {/* 3 Columns x 2 Rows for better spacing */}
-      <div className="grid grid-cols-3 gap-5 flex-1 relative z-10">
+      {/* 🎛️ THE PREMIUM DRUM PADS */}
+      {/* 3 Columns x 2 Rows */}
+      <div className="grid grid-cols-3 gap-4 md:gap-5 flex-1 relative z-10">
         {SAMPLES.map((sample) => (
           <button
             key={sample.key}
             id={`pad-${sample.key}`}
             onMouseDown={() => playSound(sample.url, sample.key, sample.name)}
-            className="relative group w-full h-full min-h-[90px] rounded-2xl bg-[#010101] border border-white/5 transition-all duration-100 flex flex-col items-center justify-center overflow-hidden hover:bg-white/[0.03] hover:border-white/20 active:border-producer shadow-inner"
+            className="drum-pad-btn relative group w-full h-full min-h-[80px] md:min-h-[90px] bg-[#F4F3EF] rounded-[1rem] border border-[#001433]/5 text-[#001433] shadow-sm transition-all duration-200 flex flex-col items-center justify-center cursor-pointer hover:bg-[#001433] hover:text-[#D4AF37] hover:shadow-[0_10px_30px_rgba(0,20,51,0.15)]"
           >
-            {/* Top Indicator Line */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-[2px] bg-brand-muted opacity-20 group-hover:opacity-50 transition-opacity"></div>
+            <span className="text-sm md:text-base font-black tracking-tighter uppercase transition-colors pointer-events-none">{sample.name}</span>
+            <span className="text-[9px] mt-1 font-mono font-bold tracking-[0.2em] text-[#001433]/40 group-hover:text-white/60 transition-colors pointer-events-none">K: {sample.key}</span>
             
-            <span className="text-xs md:text-sm font-bold text-brand-pearl tracking-widest group-hover:text-white transition-colors">{sample.name}</span>
-            <span className="text-[9px] text-brand-muted mt-2 font-mono tracking-[0.3em]">KEY: {sample.key}</span>
+            {/* Minimalist corner detail */}
+            <div className="absolute top-2 left-2 w-1 h-1 rounded-full bg-[#001433]/10 group-hover:bg-[#D4AF37]/50"></div>
           </button>
         ))}
       </div>
       
-      {/* FOOTER */}
-      <div className="mt-8 pt-6 border-t border-white/5 flex justify-between items-center relative z-10">
-         <p className="text-[9px] text-brand-muted uppercase tracking-[0.3em] font-black">Zero Latency Mode</p>
-         <p className="text-[9px] text-brand-muted uppercase tracking-[0.3em] font-mono">Use Keys 1-6</p>
+      {/* ⚙️ EDITORIAL FOOTER */}
+      <div className="mt-8 pt-4 flex justify-between items-center relative z-10">
+         <p className="text-[9px] md:text-[10px] text-[#001433]/50 uppercase tracking-[0.3em] font-black">Zero Latency Mode</p>
+         <p className="text-[9px] md:text-[10px] text-[#001433] bg-[#F4F3EF] px-3 py-1.5 rounded-full uppercase tracking-[0.2em] font-black border border-[#001433]/10">Use Keys 1-6</p>
       </div>
+
     </div>
   );
 }
