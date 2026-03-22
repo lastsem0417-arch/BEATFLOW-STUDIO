@@ -1,3 +1,4 @@
+// routes/projects.js
 const express = require('express');
 const router = express.Router();
 const Project = require('../models/Project'); // 🔥 YE LINE ZAROORI HAI
@@ -18,7 +19,8 @@ router.use(protect);
 // 🔥 SMART SAVE ROUTE (No Duplicates, No Data Mixing) 🔥
 router.post('/save', async (req, res) => {
   try {
-    const { projectId, name, tracks, lyrics, producerNotes } = req.body;
+    // 🔥 NEW: videoUrl added here to receive from frontend
+    const { projectId, name, tracks, lyrics, producerNotes, videoUrl } = req.body;
     
     // 1️⃣ UPDATE EXISTING: Agar projectId aaya hai (Matlab file already Vault me hai)
     if (projectId) {
@@ -31,7 +33,8 @@ router.post('/save', async (req, res) => {
             ...(name && { name }),
             ...(tracks && { tracks }),
             ...(lyrics !== undefined && { lyrics }), 
-            ...(producerNotes !== undefined && { producerNotes })
+            ...(producerNotes !== undefined && { producerNotes }),
+            ...(videoUrl !== undefined && { videoUrl }) // 🔥 Save Video URL on update
           } 
         },
         { new: true } // Return updated document
@@ -50,7 +53,8 @@ router.post('/save', async (req, res) => {
         creator: req.user._id,
         tracks: tracks || [],
         lyrics: lyrics || "",
-        producerNotes: producerNotes || ""
+        producerNotes: producerNotes || "",
+        videoUrl: videoUrl || null // 🔥 Save Video URL on creation
       });
 
       const savedProject = await newProject.save();

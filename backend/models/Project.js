@@ -1,3 +1,4 @@
+// models/Project.js
 const mongoose = require('mongoose');
 
 const projectSchema = new mongoose.Schema({
@@ -7,6 +8,9 @@ const projectSchema = new mongoose.Schema({
   lyrics: { type: String, default: '' },
   producerNotes: { type: String, default: '' },
   
+  // 🔥 NEW: VIDEO LINK FOR VAULT PLAYBACK 🔥
+  videoUrl: { type: String, default: null },
+
   // 🔥 NAYA CHAT LOG SYSTEM 🔥
   chatLog: [{
     senderId: String,

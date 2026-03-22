@@ -16,6 +16,9 @@ export default function UserProfile() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
 
+  // 🔥 NEW: CINEMATIC VIDEO STATE 🔥
+  const [activeVideoUrl, setActiveVideoUrl] = useState<string | null>(null);
+
   const { currentTrack, isPlaying, playTrack, togglePlayPause, progress, seek } = useAudio();
 
   const [expandedLyrics, setExpandedLyrics] = useState<Record<string, boolean>>({});
@@ -66,20 +69,29 @@ export default function UserProfile() {
     }
   };
 
+  // 🔥 UPDATED PLAY LOGIC (Handles both Audio and Video)
   const handlePlayClick = (e: React.MouseEvent, post: any) => {
     e.stopPropagation();
-    if (currentTrack?._id === post._id) {
-      togglePlayPause();
+    
+    if (post.videoUrl) {
+      // 🎬 Open Cinematic Video Player
+      setActiveVideoUrl(post.videoUrl);
+      if (isPlaying) togglePlayPause(); // Pause background music if video opens
     } else {
-      playTrack({
-        _id: post._id,
-        title: post.title,
-        contentUrl: post.contentUrl || post.audioUrl,
-        creatorName: profileUser.username,
-        creatorRole: profileUser.role,
-        creatorId: profileUser._id,
-        coverImage: profileUser.profileImage
-      });
+      // 🎵 Play Audio Normally
+      if (currentTrack?._id === post._id) {
+        togglePlayPause();
+      } else {
+        playTrack({
+          _id: post._id,
+          title: post.title,
+          contentUrl: post.contentUrl || post.audioUrl,
+          creatorName: profileUser.username,
+          creatorRole: profileUser.role,
+          creatorId: profileUser._id,
+          coverImage: profileUser.profileImage
+        });
+      }
     }
   };
 
@@ -215,6 +227,29 @@ export default function UserProfile() {
   return (
     <div className="min-h-screen bg-[#F4F3EF] text-[#111111] overflow-x-hidden overflow-y-auto custom-scrollbar relative select-none font-sans">
       
+      {/* 🎬 THE CINEMATIC VIDEO PLAYER OVERLAY 🎬 */}
+      {activeVideoUrl && (
+        <div className="fixed inset-0 z-[999999] bg-[#050505]/95 backdrop-blur-2xl flex flex-col items-center justify-center animate-in fade-in duration-500">
+          
+          <button 
+            onClick={() => setActiveVideoUrl(null)} 
+            className="absolute top-10 right-10 w-12 h-12 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all duration-300 z-50 group shadow-md"
+          >
+             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:rotate-90 transition-transform"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+          
+          <div className="w-[90vw] max-w-6xl aspect-video bg-black rounded-3xl overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.9)] border border-white/10 relative">
+             <video 
+               src={activeVideoUrl} 
+               controls 
+               autoPlay 
+               className="w-full h-full object-contain"
+             ></video>
+          </div>
+          <p className="mt-8 text-[10px] font-mono uppercase tracking-[0.4em] text-white/40 font-black animate-pulse">Director's Booth Footage</p>
+        </div>
+      )}
+
       {/* 🌟 Cinematic Cover Header */}
       <div className="relative h-80 md:h-96 w-full overflow-hidden bg-white border-b border-[#111111]/5">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#F4F3EF]/60 to-[#F4F3EF] z-10"></div>
@@ -334,8 +369,6 @@ export default function UserProfile() {
                 const isThisPlaying = currentTrack?._id === post._id;
                 const postLikes = Array.isArray(post.likes) ? post.likes : [];
                 const iLikedThis = postLikes.includes(currentUserId);
-                
-                // 🔥 THE CRASH FIX IS HERE: Ensure isExpanded is ALWAYS defined for the map loop 🔥
                 const isExpanded = expandedLyrics[post._id] || false;
 
                 return (
@@ -344,11 +377,20 @@ export default function UserProfile() {
                     className={`group bg-white border transition-all duration-500 p-8 md:p-10 rounded-[2rem] flex flex-col justify-between relative overflow-hidden hover:-translate-y-1 ${isThisPlaying ? 'shadow-[0_20px_50px_rgba(0,0,0,0.08)]' : 'shadow-[0_10px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_15px_40px_rgba(0,0,0,0.06)]'}`}
                     style={{ borderColor: isThisPlaying ? theme.hex : 'rgba(17,17,17,0.05)' }}
                   >
+                    
+                    {/* 🔥 RED VIDEO BADGE IF FOOTAGE ATTACHED 🔥 */}
+                    {post.videoUrl && (
+                      <div className="absolute top-8 right-8 z-30 flex items-center gap-2 bg-[#E63946] text-white text-[8px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full shadow-[0_5px_15px_rgba(230,57,70,0.4)] animate-in slide-in-from-right">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                        Studio Footage
+                      </div>
+                    )}
+
                     <div className={`absolute top-0 right-0 w-40 h-40 blur-[60px] rounded-full pointer-events-none transition-opacity duration-700 ${isThisPlaying ? 'opacity-10' : 'opacity-0'}`} style={{ backgroundColor: theme.hex }}></div>
 
                     <div className="flex justify-between items-start mb-8 relative z-10">
                       <h4 className="text-3xl md:text-4xl font-serif italic text-[#111111] transition-colors pr-4 truncate leading-tight" style={{ color: isThisPlaying ? theme.hex : '#111111' }}>{post.title}</h4>
-                      <span className="text-[9px] uppercase tracking-[0.3em] font-black text-[#111111]/50 bg-[#F4F3EF] px-3 py-1.5 rounded-full border border-[#111111]/5 shrink-0">{post.genre || 'Asset'}</span>
+                      {!post.videoUrl && <span className="text-[9px] uppercase tracking-[0.3em] font-black text-[#111111]/50 bg-[#F4F3EF] px-3 py-1.5 rounded-full border border-[#111111]/5 shrink-0">{post.genre || 'Asset'}</span>}
                     </div>
                     
                     {post.description && (
@@ -358,10 +400,15 @@ export default function UserProfile() {
                     {post.contentUrl && (
                       <div onClick={(e) => e.stopPropagation()} className="mb-8 rounded-[1.5rem] p-5 md:p-6 border flex flex-col md:flex-row items-center gap-6 shadow-inner transition-all duration-500 bg-[#F4F3EF]" style={{ borderColor: isThisPlaying ? `${theme.hex}40` : 'rgba(17,17,17,0.05)' }}>
                          
+                         {/* Play Button & Cover Art */}
                          <div className="relative w-24 h-24 shrink-0 rounded-[1rem] overflow-hidden bg-white group/playbtn cursor-pointer shadow-sm border border-[#111111]/10" onClick={(e) => handlePlayClick(e, post)}>
                              <img src={post.coverImage || avatarSrc} className={`w-full h-full object-cover transition-all duration-700 ${isThisPlaying ? 'opacity-50 scale-110 blur-[2px]' : 'opacity-90 group-hover/playbtn:opacity-100 group-hover/playbtn:scale-105'}`} alt="Cover" />
                              <div className="absolute inset-0 flex items-center justify-center bg-[#111111]/10 group-hover/playbtn:bg-[#111111]/20 transition-colors">
-                                {isThisPlaying && isPlaying ? (
+                                
+                                {/* Show Video Play Icon if it has a videoUrl */}
+                                {post.videoUrl ? (
+                                   <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" className="ml-1 transition-transform duration-300 group-hover/playbtn:scale-110 drop-shadow-md"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                                ) : isThisPlaying && isPlaying ? (
                                   <svg width="32" height="32" viewBox="0 0 24 24" fill={theme.hex}><rect x="6" y="4" width="4" height="16" rx="1.5"></rect><rect x="14" y="4" width="4" height="16" rx="1.5"></rect></svg>
                                 ) : (
                                   <svg width="36" height="36" viewBox="0 0 24 24" fill={isThisPlaying ? theme.hex : "#FFFFFF"} className="ml-1 transition-transform duration-300 group-hover/playbtn:scale-110 drop-shadow-md"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
@@ -369,14 +416,15 @@ export default function UserProfile() {
                              </div>
                          </div>
                          
+                         {/* Scrubber Console */}
                          <div className="flex-1 w-full">
                             <div className="flex items-end justify-between mb-5">
                                <p className="text-[10px] uppercase tracking-[0.3em] font-black text-[#111111]/50">
-                                 {isThisPlaying && isPlaying ? <span className="animate-pulse" style={{color: theme.hex}}>Transmitting</span> : 'Audio Asset'}
+                                 {isThisPlaying && isPlaying ? <span className="animate-pulse" style={{color: theme.hex}}>Transmitting</span> : (post.videoUrl ? 'Cinematic Session' : 'Audio Asset')}
                                </p>
                             </div>
                             
-                            {isThisPlaying ? (
+                            {isThisPlaying && !post.videoUrl ? (
                               <div className="relative w-full h-2.5 bg-[#111111]/10 rounded-full overflow-hidden shadow-inner">
                                 <div className="absolute top-0 left-0 h-full transition-all duration-100 ease-linear" style={{ width: `${progress}%`, backgroundColor: theme.hex }}></div>
                                 <input 

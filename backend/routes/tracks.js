@@ -19,7 +19,7 @@ router.get('/all', async (req, res) => {
   }
 });
 
-// 1. UPLOAD TRACK (Vocals or Beats)
+// 1. UPLOAD TRACK (Vocals, Beats OR Video Sessions)
 // Multer Cloudinary ke saath file handle karega aur MongoDB details save karega
 router.post('/upload', upload.single('audio'), async (req, res) => {
   try {
@@ -27,15 +27,19 @@ router.post('/upload', upload.single('audio'), async (req, res) => {
     const { title, creator, trackType, bpm } = req.body;
 
     if (!req.file) {
-      console.error("❌ Error: No audio file found in request.");
-      return res.status(400).json({ message: "Audio file is required" });
+      console.error("❌ Error: No audio/media file found in request.");
+      return res.status(400).json({ message: "Media file is required" });
     }
+
+    // 🔥 NEW: Check if the uploaded file is a WebM (Booth Video Session)
+    const isVideoSession = req.file.originalname && req.file.originalname.includes('.webm');
 
     const newTrack = new Track({
       title: title || `Session_Take_${Date.now()}`,
       creator, 
-      audioUrl: req.file.path, // Cloudinary Secure URL
-      trackType: trackType || 'vocal',
+      audioUrl: req.file.path, // Cloudinary Secure URL (Works for audio/video stream)
+      videoUrl: isVideoSession ? req.file.path : null, // 🔥 Save to video field if it's footage
+      trackType: isVideoSession ? 'session' : (trackType || 'vocal'),
       bpm: bpm || 140
     });
 

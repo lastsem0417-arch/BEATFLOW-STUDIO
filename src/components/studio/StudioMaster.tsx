@@ -19,6 +19,11 @@ export default function StudioMaster() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   
+  // 🔥 VIDEO RECORDING STATES 🔥
+  const [sessionVideoUrl, setSessionVideoUrl] = useState<string | null>(null); // Local Download Link
+  const [cloudVideoUrl, setCloudVideoUrl] = useState<string | null>(null); // Vault Database Link
+  const [isWebcamActive, setIsWebcamActive] = useState(false);
+
   // --- AUDIO FX REFS ---
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -75,7 +80,7 @@ export default function StudioMaster() {
     });
   }, [tracks]);
 
-  // --- THE DSP FX ENGINE (UNTOUCHED) ---
+  // --- THE DSP FX ENGINE ---
   useEffect(() => {
     if (isPlaying && !audioCtxRef.current) {
         audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -135,7 +140,7 @@ export default function StudioMaster() {
     });
   }, [tracks, isPlaying]);
 
-  // THE PLAYBACK SYNC (UNTOUCHED)
+  // THE PLAYBACK SYNC 
   useEffect(() => {
     const updateEngine = (timestamp: number) => {
       if (!startTimeRef.current) startTimeRef.current = timestamp - (pausedTimeRef.current * 1000);
@@ -181,21 +186,21 @@ export default function StudioMaster() {
     return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
   }, [isPlaying, isRecording, tracks]);
 
-  // --- 🔥 EXPORT MIXDOWN LOGIC (UNTOUCHED) 🔥 ---
+  // --- 🔥 THE BULLETPROOF EXPORT ENGINE 🔥 ---
   const handleExport = async () => {
     const activeAudios = tracks.filter(t => t.audioUrl && !t.isMuted);
     if (activeAudios.length === 0) {
-      alert("No audio to export!");
+      alert("System Alert: No audio to export!");
       return;
     }
 
-    alert("Mixing down your session... Please wait.");
+    alert("Mixing down your session & packaging video... Please wait.");
     
+    // 1. RENDER AUDIO
     const offlineCtx = new OfflineAudioContext(2, 44100 * duration, 44100);
 
     for (const track of tracks) {
       if (!track.audioUrl || track.isMuted) continue;
-
       try {
         const response = await fetch(track.audioUrl);
         const arrayBuffer = await response.arrayBuffer();
@@ -225,12 +230,29 @@ export default function StudioMaster() {
 
     const renderedBuffer = await offlineCtx.startRendering();
     const wavBlob = bufferToWave(renderedBuffer, renderedBuffer.length);
-    const downloadUrl = window.URL.createObjectURL(wavBlob);
+    const downloadAudioUrl = window.URL.createObjectURL(wavBlob);
     
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.download = `${currentProjectName.replace(/\s+/g, '_')}_Final_Master.wav`;
-    link.click();
+    // 🔥 FIX: APPEND LINK TO DOM TO FORCE BROWSER DOWNLOAD 🔥
+    const audioLink = document.createElement('a');
+    audioLink.style.display = 'none';
+    audioLink.href = downloadAudioUrl;
+    audioLink.download = `${currentProjectName.replace(/\s+/g, '_')}_Final_Master.wav`;
+    document.body.appendChild(audioLink);
+    audioLink.click();
+    document.body.removeChild(audioLink);
+
+    // 2. EXPORT SESSION VIDEO (With Delay and DOM Append)
+    if (sessionVideoUrl) {
+      setTimeout(() => {
+        const videoLink = document.createElement('a');
+        videoLink.style.display = 'none';
+        videoLink.href = sessionVideoUrl;
+        videoLink.download = `${currentProjectName.replace(/\s+/g, '_')}_Booth_Footage.webm`;
+        document.body.appendChild(videoLink);
+        videoLink.click();
+        document.body.removeChild(videoLink);
+      }, 1500); // 1.5 seconds delay so the browser doesn't block it as a popup
+    }
   };
 
   function bufferToWave(abuffer: AudioBuffer, len: number) {
@@ -260,7 +282,7 @@ export default function StudioMaster() {
     return new Blob([buffer], {type: "audio/wav"});
   }
 
-  // --- ACTIONS (UNTOUCHED) ---
+  // --- ACTIONS ---
   const togglePlay = () => {
     if (isPlaying) {
       setIsPlaying(false);
@@ -305,58 +327,114 @@ export default function StudioMaster() {
     });
   };
 
+  // 🔥 TOGGLE RECORD (ROBUST MIME TYPE HANDLING) 🔥
   const toggleRecord = async () => {
     if (isRecording) { stopEngine(); } 
     else {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ 
-            audio: {
-                echoCancellation: false,
-                noiseSuppression: false,
-                autoGainControl: false,
-                sampleRate: 44100
-            } 
+            video: { width: 1280, height: 720 }, 
+            audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, sampleRate: 44100 } 
         });
-        mediaRecorderRef.current = new MediaRecorder(stream);
-        mediaRecorderRef.current.ondataavailable = (e) => audioChunksRef.current.push(e.data);
+        
+        setIsWebcamActive(true);
+        audioChunksRef.current = [];
+
+        // Check browser compatibility for video format
+        let options = { mimeType: 'video/webm' };
+        if (MediaRecorder.isTypeSupported('video/webm; codecs=vp9,opus')) {
+            options = { mimeType: 'video/webm; codecs=vp9,opus' };
+        } else if (MediaRecorder.isTypeSupported('video/webm; codecs=vp8,opus')) {
+            options = { mimeType: 'video/webm; codecs=vp8,opus' };
+        }
+
+        mediaRecorderRef.current = new MediaRecorder(stream, options);
+        
+        mediaRecorderRef.current.ondataavailable = (e) => {
+            if (e.data.size > 0) audioChunksRef.current.push(e.data);
+        };
         mediaRecorderRef.current.onstop = handleUploadTrack;
 
         pausedTimeRef.current = 0; 
         setIsRecording(true);
         setIsPlaying(true);
         mediaRecorderRef.current.start();
-      } catch (err) { alert("Mic required!"); }
+        
+      } catch (err) { 
+        alert("Camera and Mic permissions are required for Director Booth!"); 
+      }
     }
   };
 
   const stopRecordingProcess = () => {
     setIsRecording(false);
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') mediaRecorderRef.current.stop();
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+        mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+        setIsWebcamActive(false);
+    }
   };
 
+  // 🔥 UPLOAD TO CLOUDINARY 🔥
   const handleUploadTrack = async () => {
     setTracks(prev => prev.map(t => t.id === activeTrackId ? { ...t, isProcessing: true } : t));
-    const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+    
+    // Create Blob from chunks
+    const mime = mediaRecorderRef.current?.mimeType || 'video/webm';
+    const mediaBlob = new Blob(audioChunksRef.current, { type: mime });
+    
+    // Set for local download immediately
+    const videoUrl = URL.createObjectURL(mediaBlob);
+    setSessionVideoUrl(videoUrl);
+
+    // Upload to Backend/Cloudinary
     const formData = new FormData();
-    formData.append('audio', audioBlob, 'studio_take.wav');
+    formData.append('audio', mediaBlob, 'studio_take.webm'); 
     formData.append('title', `Take_${Math.floor(Math.random()*1000)}`);
     formData.append('creator', userId || 'guest');
     formData.append('trackType', 'vocal');
     
     try {
       const res = await axios.post('http://localhost:5000/api/tracks/upload', formData);
-      setTracks(prev => prev.map(t => t.id === activeTrackId ? { ...t, isProcessing: false, audioUrl: res.data.audioUrl, title: res.data.title, startTime: 0, trimStart: 0, duration: 15 } : t));
+      
+      if (res.data.videoUrl) {
+        setCloudVideoUrl(res.data.videoUrl); // Set global cloud URL
+      }
+
+      setTracks(prev => prev.map(t => t.id === activeTrackId ? { 
+        ...t, 
+        isProcessing: false, 
+        audioUrl: res.data.audioUrl, 
+        videoUrl: res.data.videoUrl, // Keep link directly on the track
+        title: res.data.title, 
+        startTime: 0, 
+        trimStart: 0, 
+        duration: 15 
+      } : t));
     } catch (e) { 
       setTracks(prev => prev.map(t => t.id === activeTrackId ? { ...t, isProcessing: false } : t)); 
+      alert("Failed to sync video to cloud. You can still export locally.");
     }
     audioChunksRef.current = [];
   };
 
+  // 🔥 BULLETPROOF SAVE TO VAULT 🔥
   const handleModalAction = async () => {
     if (modalConfig.type === 'save') {
       if (!tempProjectName.trim()) return;
       setCurrentProjectName(tempProjectName);
-      const projectData = { id: `proj_${Date.now()}`, name: tempProjectName, creator: userId, tracks: tracks };
+      
+      // Grab Video URL securely (from state OR directly from the uploaded tracks)
+      const finalVideoUrl = cloudVideoUrl || tracks.find(t => t.videoUrl)?.videoUrl || null;
+
+      const projectData = { 
+        id: `proj_${Date.now()}`, 
+        name: tempProjectName, 
+        creator: userId, 
+        tracks: tracks,
+        videoUrl: finalVideoUrl // THIS SAVES TO MONGODB!
+      };
+      
       const updatedProjects = [projectData, ...savedProjects];
       setSavedProjects(updatedProjects);
       localStorage.setItem('beatflow_projects', JSON.stringify(updatedProjects));
@@ -368,6 +446,8 @@ export default function StudioMaster() {
     } else if (modalConfig.type === 'new') {
       stopEngine();
       setCurrentProjectName("Untitled Project");
+      setSessionVideoUrl(null); 
+      setCloudVideoUrl(null);
       setTracks([
         { id: `track_${Date.now()}_1`, title: 'Main Vocals', type: 'vocal', audioUrl: null, startTime: 0, trimStart: 0, duration: 15, isProcessing: false, volume: 0.8, isMuted: false, isSolo: false, preset: 'clean' },
         { id: `track_${Date.now()}_2`, title: 'Beat Audio', type: 'beat', audioUrl: null, startTime: 0, trimStart: 0, duration: 15, isProcessing: false, volume: 0.7, isMuted: false, isSolo: false, preset: 'clean' }
@@ -381,6 +461,10 @@ export default function StudioMaster() {
     stopEngine();
     setCurrentProjectName(project.name);
     setTracks(project.tracks); 
+    
+    setSessionVideoUrl(project.videoUrl || null); 
+    setCloudVideoUrl(project.videoUrl || null); 
+    
     setProducerNotes(project.producerNotes || "");
     if(project.tracks.length > 0) setActiveTrackId(project.tracks[0].id);
   };
@@ -406,21 +490,38 @@ export default function StudioMaster() {
     return () => ctx.revert();
   }, []);
 
+  // Determine if we have footage ready to save/view
+  const hasFootage = sessionVideoUrl || cloudVideoUrl || tracks.some(t => t.videoUrl);
+
   return (
-    // 🔥 HIGH-END VANTABLACK STUDIO WRAPPER (#080808 base) 🔥
     <div ref={containerRef} className="h-screen w-full bg-[#080808] text-[#F4F3EF] flex flex-col font-sans overflow-hidden relative select-none">
       
-      {/* Subtle Studio Lighting (Deep Red Glow in top right) */}
+      {/* Subtle Studio Lighting */}
       <div className="absolute top-0 right-0 w-[40vw] h-[40vw] bg-[radial-gradient(circle_at_center,rgba(230,57,70,0.06)_0%,transparent_70%)] pointer-events-none z-0"></div>
-      {/* Analog Noise Overlay */}
       <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-[0.03] mix-blend-screen pointer-events-none z-0"></div>
+
+      {/* RECORDING INDICATOR */}
+      {isRecording && (
+        <div className="absolute top-24 right-6 z-[999] flex items-center gap-3 bg-red-500/10 border border-red-500/30 px-4 py-2 rounded-full backdrop-blur-md">
+          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_10px_red]"></span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-red-500">Camera Active</span>
+        </div>
+      )}
+
+      {/* SESSION FOOTAGE SAVED INDICATOR */}
+      {hasFootage && !isRecording && (
+        <div className="absolute top-24 right-6 z-[999] flex items-center gap-3 bg-[#D4AF37]/10 border border-[#D4AF37]/30 px-4 py-2 rounded-full backdrop-blur-md animate-in slide-in-from-right duration-500">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="2"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+          <span className="text-[10px] font-black uppercase tracking-widest text-[#D4AF37]">Booth Footage Ready</span>
+        </div>
+      )}
 
       <DraggableWebcam />
       <LyricPad />
 
-      {/* 👑 PREMIUM PRODUCER FEEDBACK PANEL (Gold touch in dark room) */}
+      {/* PRODUCER FEEDBACK PANEL */}
       {producerNotes && (
-        <div className="absolute top-28 right-10 z-[100] w-80 animate-in slide-in-from-right duration-700">
+        <div className="absolute top-36 right-6 z-[100] w-80 animate-in slide-in-from-right duration-700">
             <div className="bg-[#121212]/80 backdrop-blur-3xl border border-[#D4AF37]/20 p-6 rounded-[1rem] shadow-[0_20px_50px_rgba(0,0,0,0.8)] relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4AF37]/5 blur-[40px] rounded-full pointer-events-none"></div>
                 <div className="flex items-center gap-3 mb-4 relative z-10">
@@ -438,7 +539,6 @@ export default function StudioMaster() {
         <div className="absolute inset-0 z-[9999] bg-[#080808]/90 backdrop-blur-xl flex items-center justify-center animate-in fade-in duration-300">
           <div className="bg-[#121212] border border-white/5 p-10 rounded-[1.5rem] shadow-[0_40px_80px_rgba(0,0,0,1)] w-[450px] flex flex-col gap-6 relative overflow-hidden">
              
-             {/* Dynamic Glow based on action */}
              <div className={`absolute top-[-20%] left-1/2 -translate-x-1/2 w-40 h-40 blur-[80px] rounded-full pointer-events-none ${modalConfig.type === 'save' ? 'bg-[#D4AF37]/10' : 'bg-[#E63946]/15'}`}></div>
              
              <h2 className="text-3xl font-serif italic text-[#F4F3EF] relative z-10 tracking-tight">
@@ -456,10 +556,18 @@ export default function StudioMaster() {
                    className="w-full bg-[#080808] border border-white/5 p-4 rounded-xl text-[#F4F3EF] outline-none focus:border-[#E63946]/50 transition-all font-mono text-sm placeholder:text-[#888888]/40 shadow-inner" 
                    placeholder="Name your track..." 
                  />
+                 
+                 {/* 🔥 SHOW USER IF VIDEO WILL BE SAVED TO VAULT 🔥 */}
+                 {hasFootage && (
+                   <p className="text-[9px] text-[#10B981] uppercase tracking-widest mt-4 font-black flex items-center gap-2">
+                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                     Video Footage Attached to Vault
+                   </p>
+                 )}
                </div>
              ) : (
                <p className="text-sm text-[#888888] font-light leading-relaxed relative z-10">
-                 Starting a new session will wipe all unsaved vocal takes and beat layers from the console. Proceed?
+                 Starting a new session will wipe all unsaved vocal takes, booth footage, and beat layers. Proceed?
                </p>
              )}
              
@@ -485,8 +593,8 @@ export default function StudioMaster() {
         <audio key={track.id} ref={el => { if(el) audioRefs.current[track.id] = el }} src={track.audioUrl} crossOrigin="anonymous" onLoadedMetadata={(e:any) => { if(track.duration === 0 || track.duration === 20) updateTrack(track.id, 'duration', e.target.duration); }} />
       ))}
 
-      {/* 🔥 THE CORE DAW COMPONENTS (PROPS UNTOUCHED) 🔥 */}
-      <div className="relative z-10 flex flex-col h-full w-full">
+      {/* THE CORE DAW COMPONENTS */}
+      <div className="relative z-10 flex flex-col h-full w-full mt-2">
           <TopTransportBar 
             isPlaying={isPlaying} isRecording={isRecording} togglePlay={togglePlay} stopEngine={stopEngine} toggleRecord={toggleRecord} 
             onSaveProject={() => { setTempProjectName(currentProjectName); setModalConfig({ isOpen: true, type: 'save' }); }} 

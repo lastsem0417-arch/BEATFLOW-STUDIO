@@ -13,8 +13,9 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'luxury_studio_recordings',
-    resource_type: 'auto', // Audio ke liye ye 'auto' ya 'video' hona zaroori hai
-    format: 'mp3', // WAV ko MP3 mein convert kar dega cloud par hi
+    // 🔥 THE FIX: Use 'video' for BOTH audio and video uploads in Cloudinary. 
+    // 'auto' gets confused by browser-generated blobs.
+    resource_type: 'video', 
   },
 });
 
