@@ -102,7 +102,11 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
       setLocalStream(stream);
 
       socketRef.current = io(import.meta.env.VITE_API_URL as string);
-      socketRef.current.emit("join-room", { roomId, userDetails: user });
+      
+      // Connection setup needed
+      socketRef.current.on("connect", () => {
+         socketRef.current?.emit("join-room", { roomId, userDetails: user });
+      });
 
       socketRef.current.on("user-connected", (payload) => {
         if (!peersRef.current.find(p => p.peerID === payload.userId)) {
@@ -181,25 +185,40 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
     if (isCamOn && localVideoRef.current && localStream) { localVideoRef.current.srcObject = localStream; }
   }, [isCamOn, localStream]);
 
-  // 🔥 THE FIX: ADDING GOOGLE STUN SERVERS FOR LIVE DEPLOYMENT P2P CONNECTION 🔥
+  // 🔥 THE MISSING PIECE FOR LIVE DEPLOYMENTS P2P 🔥
+  // STUN finds public IP. TURN relays video when firewalls block direct connection.
   const peerConfig = {
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
       { urls: 'stun:stun1.l.google.com:19302' },
       { urls: 'stun:stun2.l.google.com:19302' },
-      { urls: 'stun:global.stun.twilio.com:3478' }
+      {
+        urls: "turn:openrelay.metered.ca:80",
+        username: "openrelayproject",
+        credential: "openrelayproject"
+      },
+      {
+        urls: "turn:openrelay.metered.ca:443",
+        username: "openrelayproject",
+        credential: "openrelayproject"
+      },
+      {
+        urls: "turn:openrelay.metered.ca:443?transport=tcp",
+        username: "openrelayproject",
+        credential: "openrelayproject"
+      }
     ]
   };
 
   function createPeer(userToSignal: string, callerID: string, stream: MediaStream, userDetails: any) {
-    // 🚨 config: peerConfig is CRITICAL for live internet connections
+    // config with peerConfig added here
     const peer = new Peer({ initiator: true, trickle: false, stream, config: peerConfig });
     peer.on("signal", signal => { socketRef.current?.emit("sending-signal", { userToSignal, callerID, signal, userDetails }); });
     return peer;
   }
   
   function addPeer(incomingSignal: any, callerID: string, stream: MediaStream) {
-    // 🚨 config: peerConfig added here too
+    // config with peerConfig added here
     const peer = new Peer({ initiator: false, trickle: false, stream, config: peerConfig });
     peer.on("signal", signal => { socketRef.current?.emit("returning-signal", { signal, callerID }); });
     peer.signal(incomingSignal);
