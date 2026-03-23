@@ -11,10 +11,15 @@ const app = express();
 const server = http.createServer(app);
 
 // ==========================================
-// 🔥 DYNAMIC CORS SETUP (Local + Live) 🔥
+// 🔥 DYNAMIC CORS SETUP (BULLETPROOF) 🔥
 // ==========================================
+// Bhai Vite kabhi kabhi port change kar deta hai, isliye common ports daal diye hain
 const allowedOrigins = [
-  'http://localhost:5173', // Tera Local Frontend
+  'http://localhost:5173', 
+  'http://localhost:5174',
+  'http://localhost:5175', // 🚨 TERA CURRENT FRONTEND PORT YAHAN MISSING THA! 🚨
+  'http://localhost:5176',
+  'http://localhost:5177',
   'https://beatflow-studio-wnt0.onrender.com' // Tera Live Frontend
 ];
 

@@ -76,7 +76,6 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
     const fetchRoomData = async () => {
       try {
         const config = { headers: { Authorization: `Bearer ${user.token}` } };
-        // FIXED: Replaced string literal with proper template literal variable evaluation
         const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/collab/rooms/${roomId}`, config);
         const roomData = res.data.room || res.data.data || res.data; 
         if (roomData && roomData.chatHistory && roomData.chatHistory.length > 0) {
@@ -102,7 +101,6 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
       streamRef = stream;
       setLocalStream(stream);
 
-      // FIXED: Passed as actual string value, not literal
       socketRef.current = io(import.meta.env.VITE_API_URL as string);
       socketRef.current.emit("join-room", { roomId, userDetails: user });
 
@@ -163,7 +161,6 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
     }).catch(err => {
       console.error("Camera error:", err);
       if (isMounted) {
-         // FIXED
          socketRef.current = io(import.meta.env.VITE_API_URL as string);
          socketRef.current.emit("join-room", { roomId, userDetails: user });
       }
@@ -184,13 +181,26 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
     if (isCamOn && localVideoRef.current && localStream) { localVideoRef.current.srcObject = localStream; }
   }, [isCamOn, localStream]);
 
+  // 🔥 THE FIX: ADDING GOOGLE STUN SERVERS FOR LIVE DEPLOYMENT P2P CONNECTION 🔥
+  const peerConfig = {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
+      { urls: 'stun:global.stun.twilio.com:3478' }
+    ]
+  };
+
   function createPeer(userToSignal: string, callerID: string, stream: MediaStream, userDetails: any) {
-    const peer = new Peer({ initiator: true, trickle: false, stream });
+    // 🚨 config: peerConfig is CRITICAL for live internet connections
+    const peer = new Peer({ initiator: true, trickle: false, stream, config: peerConfig });
     peer.on("signal", signal => { socketRef.current?.emit("sending-signal", { userToSignal, callerID, signal, userDetails }); });
     return peer;
   }
+  
   function addPeer(incomingSignal: any, callerID: string, stream: MediaStream) {
-    const peer = new Peer({ initiator: false, trickle: false, stream });
+    // 🚨 config: peerConfig added here too
+    const peer = new Peer({ initiator: false, trickle: false, stream, config: peerConfig });
     peer.on("signal", signal => { socketRef.current?.emit("returning-signal", { signal, callerID }); });
     peer.signal(incomingSignal);
     return peer;

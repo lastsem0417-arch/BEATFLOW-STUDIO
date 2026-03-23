@@ -37,8 +37,7 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
     // 🚨 ROBUST ERROR HANDLING 🚨
     const handleError = (e: any) => {
       console.error("🚨 CRITICAL AUDIO ERROR 🚨");
-      console.error("The browser failed to load this URL:", audio.src);
-      console.error("Check if your backend is running and has: app.use('/uploads', express.static('uploads'))");
+      console.error("Failed URL:", audio.src);
       setIsPlaying(false);
     };
 
@@ -54,7 +53,6 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
   }, [currentTrack]);
 
   const playTrack = (track: any) => {
-    // 🔥 1. FIND THE EXACT URL FROM BACKEND DEEP SEARCH 🔥
     let rawUrl = track.contentUrl || track.audioUrl || track.file || track.audio;
 
     if (!rawUrl || typeof rawUrl !== 'string' || rawUrl.trim() === '') {
@@ -64,31 +62,36 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
 
     let safeUrl = rawUrl;
 
-    // 🔥 2. WINDOWS BACKSLASH FIX 🔥
+    // 🔥 1. WINDOWS BACKSLASH FIX 🔥
     safeUrl = safeUrl.replace(/\\/g, '/');
 
-    // 🔥 3. ATTACH LOCALHOST BACKEND URL SAFELY 🔥
-    if (!safeUrl.startsWith('http')) {
-        const baseUrl = BACKEND_URL.endsWith('/') ? BACKEND_URL.slice(0, -1) : BACKEND_URL;
-        const path = safeUrl.startsWith('/') ? safeUrl : `/${safeUrl}`;
-        safeUrl = `${baseUrl}${path}`;
-    }
-
-    // 🔥 4. CLOUDINARY FORMAT FIX 🔥
+    // 🔥 2. THE ULTIMATE ROUTING FIX 🔥
     if (safeUrl.includes('cloudinary.com')) {
+       // Cloudinary URL Logic
        if (/\.(mkv|webm|avi|mov|flv|ogg)$/i.test(safeUrl)) {
            safeUrl = safeUrl.replace(/\.(mkv|webm|avi|mov|flv|ogg)$/i, '.mp4');
        } else if (!/\.(mp4|mp3|wav|m4a|aac)$/i.test(safeUrl)) {
            safeUrl += '.mp4';
        }
+    } else if (safeUrl.includes('uploads/')) {
+       // 🔥 EXTRACT PURE PATH (Ignores all DB Garbage like localhost:5000 or import.meta) 🔥
+       const uploadIndex = safeUrl.indexOf('uploads/');
+       let purePath = safeUrl.substring(uploadIndex);
+       
+       // Encode spaces so songs like "For youuuu" or "Kora Kagaz" work perfectly
+       purePath = encodeURI(purePath);
+       
+       const baseUrl = BACKEND_URL.endsWith('/') ? BACKEND_URL.slice(0, -1) : BACKEND_URL;
+       safeUrl = `${baseUrl}/${purePath}`;
+    } else {
+       // Fallback space encoding
+       safeUrl = encodeURI(safeUrl);
     }
 
-    // 🕵️ DEBUG LOG: Check this in your browser console!
-    console.log("🔊 ATTEMPTING TO PLAY URL:", safeUrl);
+    console.log("🔊 FINAL PLAY URL:", safeUrl);
 
     const safeTrack = { ...track, contentUrl: safeUrl };
 
-    // Toggle if same track clicked
     if (currentTrack?._id === safeTrack._id) {
       togglePlayPause();
       return;
@@ -100,7 +103,7 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
     setTimeout(() => {
       if (audioRef.current) {
         audioRef.current.play().catch(err => {
-            console.error("Playback Blocked:", err);
+            console.error("Playback error:", err);
             setIsPlaying(false);
         });
       }
@@ -128,7 +131,6 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <AudioContext.Provider value={{ currentTrack, isPlaying, progress, playTrack, togglePlayPause, seek, audioRef }}>
-      {/* Hidden Audio Element */}
       <audio ref={audioRef} src={currentTrack?.contentUrl} className="hidden" />
       {children}
     </AudioContext.Provider>
