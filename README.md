@@ -1,120 +1,130 @@
-<p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=001433&height=250&section=header&text=BeatFlow%20Studio&fontSize=70&fontColor=D4AF37&animation=fadeIn&fontAlignY=38&desc=The%20Ultimate%20Collaborative%20SaaS%20for%20Music%20Production&descAlignY=55&descAlign=50" alt="BeatFlow Banner">
-</p>
+<div align="center">
+  
+  # 🎧 BeatFlow Studio
+  **The Ultimate Real-Time Collaboration Ecosystem for Music Creators**
 
-<p align="center">
-  <a href="#features"><img src="https://img.shields.io/badge/Status-Production%20Ready-10B981?style=for-the-badge&logo=checkmarx&logoColor=white" alt="Status"></a>
-  <a href="#tech-stack"><img src="https://img.shields.io/badge/Tech-MERN%20Stack-0EA5E9?style=for-the-badge&logo=react&logoColor=white" alt="Tech"></a>
-  <a href="#architecture"><img src="https://img.shields.io/badge/RealTime-Socket.io%20%7C%20WebRTC-E63946?style=for-the-badge&logo=socket.io&logoColor=white" alt="RealTime"></a>
-  <a href="#dsp"><img src="https://img.shields.io/badge/DSP-Web%20Audio%20API-D4AF37?style=for-the-badge&logo=webaudio&logoColor=black" alt="DSP"></a>
-</p>
+  <p align="center">
+    <img src="https://img.shields.io/badge/MERN_Stack-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="MERN" />
+    <img src="https://img.shields.io/badge/WebRTC-333333?style=for-the-badge&logo=webrtc&logoColor=white" alt="WebRTC" />
+    <img src="https://img.shields.io/badge/Socket.io-010101?style=for-the-badge&logo=socket.io&logoColor=white" alt="Socket.io" />
+    <img src="https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E" alt="Vite" />
+  </p>
 
-<h3 align="center">Isolate. Collaborate. Monetize. 🎵</h3>
+  > BeatFlow Studio is not just an app; it's a virtual soundstage. We bridge the gap between Producers, Rappers, and Lyricists through a role-based, dynamic ecosystem featuring real-time audio/video collaboration, shared digital canvases, and a global discovery feed.
 
-<p align="center">
-  <strong>BeatFlow</strong> is a cutting-edge, role-based collaborative music production operating system. Designed exclusively for Producers, Rappers, and Lyricists to connect in real-time, extract audio stems using neural-inspired DSP, and cryptographically sign master split agreements—all wrapped in a seamless, GSAP-animated cinematic interface.
-</p>
-
-<br />
+</div>
 
 ---
 
-## 🌌 The Ecosystem (Role-Based Environments)
+## 🌟 The Vision
 
-BeatFlow isn't just a UI; it acts as a personalized Digital Audio Workstation (DAW) tailored to the specific needs of different music creators.
-
-### 🎹 1. Producer Master (Sonic Architect)
-- **Beat Inventory & Explorer:** Manage uploaded beats and explore global frequencies.
-- **Interactive Drum Pad:** Real-time beat triggering interface.
-- **Upload Portal:** Secure asset management with direct MongoDB integration.
-- **AI Stem Mixer:** Built-in DSP engine to manipulate frequencies.
-
-### 🎙️ 2. Vocal Chamber (Rapper)
-- **Booth Initialization:** Secure recording environment with draggable webcam feeds.
-- **Asset Drop:** Seamlessly upload and sync vocal stems to the collaborative canvas.
-- **Global Network Feed:** Connect with producers and lyricists worldwide.
-
-### 📝 3. Lyricist Hub (Writer's Canvas)
-- **Ghostwriter Pad:** Distraction-free, focused writing environment.
-- **Secure Vault:** Private archive for lyrical assets and unreleased projects.
-- **Editorial UI:** Cyber-organic green aesthetic specifically designed for writers.
+Traditional music collaboration requires artists to be in the same physical studio or deal with the messy back-and-forth of email attachments. **BeatFlow Studio** solves this by providing a unified, latency-optimized virtual studio where creators can meet face-to-face, drop audio stems onto a shared canvas, and build tracks in real-time.
 
 ---
 
-## ✨ Flagship Modules (The Magic Under the Hood)
+## 🔥 Flagship Features
 
-### ⚖️ 1. Smart Splitter & Legal Engine
-*The most advanced royalty management system built natively into a web app.*
-- **Automated Split Math:** Dynamically divides remaining percentages equally among collaborators while locking a mandatory 20% platform fee.
-- **Strict Owner Verification:** Real-time database syncing ensures only the session creator can lock and propose the master contract.
-- **Smart Validation Slider:** Custom UI that guides users to maintain a strict 100% total allocation (`Remaining: 0%`) before allowing contract execution.
-- **Vector PDF Generation:** Uses `jsPDF` to generate completely native, high-resolution **Master License Agreements** directly in the browser (No third-party API dependencies). Complete with cryptographic document IDs and visual digital signatures.
+### 1. Dynamic Role-Based Ecosystem
+The entire UI/UX physically adapts based on the user's artistic discipline. Every role gets a tailored experience, custom toolsets, and premium thematic styling:
+* 🎛️ **Producers (Gold Theme):** Access to beat drops, frequency scanners, and heavy audio-file management.
+* 🎙️ **Rappers (Crimson Red Theme):** Vocal booth initialization, secure vault archives, and audio transmissions.
+* 📝 **Lyricists (Emerald Green Theme):** Distraction-free draft pads, lyrics expansion, and textual collaboration tools.
+* 🎧 **Listeners (Royal Blue Theme):** Clean feed exploration and scouting interfaces.
 
-### 🎛️ 2. AI Neural Stem Extractor (DSP)
-*Browser-based Digital Signal Processing without server-side rendering.*
-- **Web Audio API Engine:** Implements cascading Biquad Filters (Double Lowpass for 24dB/oct cutoff, Highpass, Notch) to isolate real-time frequencies.
-- **Parametric Controls:** Real-time Gain adjustments, Solo, and Mute functionalities for 4 specific bands (808/Bass, Vocals, Melody, Drums).
-- **Blob Memory Management:** Handles local audio file execution using `URL.createObjectURL()` while strictly preventing memory leaks and CORS security muting.
+![Dashboard Preview](Insert_Link_To_Dashboard_Screenshot_Here)
 
-### 🤝 3. Real-Time Collab Studio
-*Create together, miles apart.*
-- **Socket.io War Room:** Synchronizes project state, live chat, and multi-track canvases across multiple users instantly.
-- **WebRTC Integration:** Peer-to-peer signaling for scalable real-time video/audio communication.
-- **Passcode Protected Vaults:** Sessions are locked behind generated 6-digit cryptographic keys.
+### 2. Sync Forge Live (Collab Studio)
+The crown jewel of BeatFlow. A completely custom-built real-time studio environment.
+* **WebRTC Video/Audio Matrix:** Low-latency P2P video calling utilizing `simple-peer` backed by Google STUN and OpenRelay TURN servers to bypass strict NAT/Firewalls in production.
+* **Live Shared Canvas:** A synchronized digital board where producers drop beats and lyricists drop text. Everyone in the room sees the track layers update instantly via `Socket.io`.
+* **Group Comms:** Built-in real-time chat with system broadcast messages.
 
----
+![Collab Studio Preview](Insert_Link_To_Collab_Studio_Screenshot_Here)
 
-## 💻 Tech Stack & Architecture
+### 3. Global Soundstage (The Feed)
+A highly interactive timeline for discovery and networking.
+* **Custom Audio Engine:** We built a bulletproof, React-driven audio player that seamlessly handles Cloudinary uploads, Windows/Linux pathing, and prevents race conditions during DOM re-renders.
+* **Scrubbing & Progress:** Real-time audio scrubbing with dynamic accent colors matching the creator's role.
+* **Pitch Drop:** Artists can directly pitch collaborations on specific tracks found in the feed.
 
-<p align="center">
-  <img src="https://skillicons.dev/icons?i=react,vite,ts,tailwind,gsap,nodejs,express,mongodb" alt="Tech Stack Icons" />
-</p>
+![Feed Preview](Insert_Link_To_Global_Feed_Screenshot_Here)
 
-### Frontend 🎨
-* **Core:** React.js + Vite (Configured for global WebRTC processing)
-* **Styling:** Tailwind CSS + Custom CSS modules
-* **Animation:** GSAP (ScrollTrigger, context management) + Tailwind `animate-in`
-* **Data Visualization:** Chart.js (React-Chartjs-2) for dynamic royalty pie charts
-* **Document Engine:** jsPDF (Client-side vector document rendering)
-
-### Backend & Real-Time ⚙️
-* **Server:** Node.js + Express.js
-* **Database:** MongoDB + Mongoose (Strict schema validation)
-* **WebSocket Engine:** Socket.io (Configured with `1e8` maxHttpBufferSize to handle large 100MB audio payload syncs)
-* **Auth:** JWT (JSON Web Tokens) + Protected Routes
+### 4. The Secure Vault
+Personalized project management where artists can safely archive their stems, drafts, and ongoing collaborations. Includes one-click loading back into the active Collab Studio.
 
 ---
 
-## 🧠 Design Philosophy & UI/UX
+## 🛠️ Technical Architecture
 
-The UI was meticulously crafted to escape the generic "SaaS Dashboard" look. We opted for a **Premium Editorial Aesthetic**:
-- **Typography:** Bold Serif italics (`font-serif italic`) paired with aggressive monospace tracking (`tracking-[0.4em]`).
-- **Color Palette:** - Deep Navy (`#001433`) & Gold (`#D4AF37`) for Producers.
-  - Charcoal (`#111111`) & Crimson (`#E63946`) for Rappers.
-  - Cyber-Organic Off-White (`#F9F8F6`) & Emerald Green (`#10B981`) for Lyricists.
-- **Layout Constraints:** Bento-box designs with engineered `h-screen flex-1` wrappers. Instead of generic page flows, it features app-like sticky containers with custom-styled internal scrollbars.
-- **Micro-Interactions:** Physical feeling interactions with `active:scale-95`, glowing status dots, and seamless conditional rendering.
+### Frontend (Client)
+* **Core:** React 18, TypeScript, Vite
+* **Styling & Animation:** Tailwind CSS, GSAP (ScrollTrigger), Context API
+* **Real-time:** Socket.io-client, Simple-Peer (WebRTC)
+* **Media Handling:** Native HTML5 Audio API via custom hooks.
+
+### Backend (Server)
+* **Core:** Node.js, Express.js
+* **Database:** MongoDB, Mongoose
+* **Real-time Engine:** Socket.io (with 100MB buffer limits for heavy audio files)
+* **Security & Auth:** JSON Web Tokens (JWT), bcryptjs
+* **Cloud Storage:** Multer, Cloudinary API
 
 ---
 
-## 🚀 Run It Locally
+## 📸 Platform Gallery
 
-**Prerequisites:** Node.js (v18+), MongoDB instance.
+| Global Soundstage | Sync Forge Live | Producer Dashboard |
+| :---: | :---: | :---: |
+| <img src="Insert_Link_Here" width="250"/> | <img src="Insert_Link_Here" width="250"/> | <img src="Insert_Link_Here" width="250"/> |
+| *Discover and stream tracks* | *WebRTC Video + Shared Canvas* | *Tailored UI for beatmakers* |
 
-### 1. Clone the repository
+---
+
+## 💻 Local Installation & Setup
+
+Want to run BeatFlow Studio locally? Follow these steps:
+
+**1. Clone the repository**
+
 ```bash
-git clone [https://github.com/yourusername/BeatFlow-Studio.git](https://github.com/yourusername/BeatFlow-Studio.git)
-cd BeatFlow-Studio
+git clone [https://github.com/YourUsername/beatflow-studio.git](https://github.com/YourUsername/beatflow-studio.git)
+cd beatflow-studio
+2. Setup Backend
 
-### 2. Setup the backend
-```bash
+Bash
 cd backend
 npm install
-# Create a .env file with: PORT=5000, MONGO_URI=your_mongo_url, JWT_SECRET=your_secret
-node server.js
 
-3. setup the frontend
-cd frontend
+Create a .env file in the backend directory:
+
+Code snippet
+PORT=5000
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_super_secret_key
+
+Start the server:
+
+Bash
+npm start
+
+3. Setup Frontend
+
+Bash
+cd ../frontend
 npm install
+
+Create a .env file in the frontend directory:
+
+Code snippet
+VITE_API_URL=http://localhost:5000
+Start the Vite development server:
+
+Bash
 npm run dev
 
+👥 Meet the Iconic Team
+Aryan Singh - Lead Architect & Full-Stack Engineer (WebRTC, Socket Engine, Audio Context)
+
+Khushi - Frontend Developer & UI/UX Specialist (Role Ecosystems, Global Feed)
+
+Mariyam - Backend Developer & Data Manager (Vault Systems, API Routing)
