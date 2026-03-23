@@ -15,7 +15,7 @@ export default function RapperActivity() {
 
   const fetchSessions = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/projects/all'); 
+      const res = await axios.get('import.meta.env.VITE_API_URL/api/projects/all'); 
       setSessions(res.data.filter((s: any) => s.tracks && s.tracks.length > 0));
       setLoading(false);
     } catch (err) { setLoading(false); }
@@ -63,7 +63,7 @@ export default function RapperActivity() {
     setIsSaving(true);
     setBtnText("TRANSMITTING...");
     try {
-      await axios.patch(`http://localhost:5000/api/projects/${selectedSession._id}/notes`, {
+      await axios.patch(`import.meta.env.VITE_API_URL/api/projects/${selectedSession._id}/notes`, {
         notes: feedback
       });
       setBtnText("OVERRIDE INJECTED ✓");

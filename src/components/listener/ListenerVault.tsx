@@ -16,7 +16,7 @@ export default function ListenerVault() {
   useEffect(() => {
     const fetchVault = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/feed');
+        const res = await axios.get('import.meta.env.VITE_API_URL/api/feed');
         // Keep only tracks the current user has liked
         const likedTracks = res.data.filter((track: any) => track.likes?.includes(userId));
         setVaultTracks(likedTracks);

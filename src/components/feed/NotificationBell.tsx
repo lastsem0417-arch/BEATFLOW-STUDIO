@@ -14,7 +14,7 @@ export default function NotificationBell() {
   const fetchNotifications = async () => {
     if (!loggedInUser.token) return;
     try {
-      const res = await axios.get('http://localhost:5000/api/notifications', {
+      const res = await axios.get('import.meta.env.VITE_API_URL/api/notifications', {
         headers: { Authorization: `Bearer ${loggedInUser.token}` }
       });
       setNotifications(res.data);
@@ -33,7 +33,7 @@ export default function NotificationBell() {
     setIsOpen(true);
     if (unreadCount > 0) {
       try {
-        await axios.put('http://localhost:5000/api/notifications/mark-read', {}, {
+        await axios.put('import.meta.env.VITE_API_URL/api/notifications/mark-read', {}, {
           headers: { Authorization: `Bearer ${loggedInUser.token}` }
         });
         setUnreadCount(0);

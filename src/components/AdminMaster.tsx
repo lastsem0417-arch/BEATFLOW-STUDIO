@@ -25,8 +25,8 @@ export default function AdminMaster() {
       try {
         const config = { headers: { Authorization: `Bearer ${loggedInUser.token}` } };
         const [statsRes, usersRes] = await Promise.all([
-          axios.get('http://localhost:5000/api/admin/stats', config),
-          axios.get('http://localhost:5000/api/admin/users', config)
+          axios.get('import.meta.env.VITE_API_URL/api/admin/stats', config),
+          axios.get('import.meta.env.VITE_API_URL/api/admin/users', config)
         ]);
         setStats(statsRes.data);
         setUsers(usersRes.data);
@@ -42,7 +42,7 @@ export default function AdminMaster() {
   const handleVerify = async (userId: string) => {
     try {
       const config = { headers: { Authorization: `Bearer ${loggedInUser.token}` } };
-      await axios.put(`http://localhost:5000/api/admin/users/${userId}/verify`, {}, config);
+      await axios.put(`import.meta.env.VITE_API_URL/api/admin/users/${userId}/verify`, {}, config);
       setUsers(users.map(u => u._id === userId ? { ...u, isVerified: !u.isVerified } : u));
     } catch (err) {
       alert("Error verifying user.");
@@ -54,7 +54,7 @@ export default function AdminMaster() {
     if (!window.confirm(`⚠️ SYSTEM WARNING: Are you sure you want to PERMANENTLY SUSPEND ${username}?`)) return;
     try {
       const config = { headers: { Authorization: `Bearer ${loggedInUser.token}` } };
-      await axios.delete(`http://localhost:5000/api/admin/users/${userId}/ban`, config);
+      await axios.delete(`import.meta.env.VITE_API_URL/api/admin/users/${userId}/ban`, config);
       setUsers(users.filter(u => u._id !== userId));
       setStats({ ...stats, totalUsers: stats.totalUsers - 1 }); 
     } catch (err) {

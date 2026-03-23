@@ -91,7 +91,7 @@ export default function LyricistStudio() {
     setIsAiLoading(true);
     try {
       const token = currentUser.token;
-      const res = await axios.post('http://localhost:5000/api/ai/generate-bars', 
+      const res = await axios.post('import.meta.env.VITE_API_URL/api/ai/generate-bars', 
         { currentLyrics: lyricsText }, 
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -241,7 +241,7 @@ export default function LyricistStudio() {
     try {
       const projectData = { projectId, name: projectName, creator: safeUserId, lyrics: lyricsText, tracks: [] };
       const token = currentUser.token;
-      const res = await axios.post('http://localhost:5000/api/projects/save', projectData, {
+      const res = await axios.post('import.meta.env.VITE_API_URL/api/projects/save', projectData, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!projectId && res.data._id) setProjectId(res.data._id);

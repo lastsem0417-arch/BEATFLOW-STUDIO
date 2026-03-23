@@ -19,7 +19,7 @@ export default function LyricistProfile() {
     try {
       const token = currentUser.token;
       // Backend POST route, update username on database
-      const res = await axios.put('http://localhost:5000/api/auth/profile', 
+      const res = await axios.put('import.meta.env.VITE_API_URL/api/auth/profile', 
         { username }, 
         { headers: { Authorization: `Bearer ${token}` } }
       );

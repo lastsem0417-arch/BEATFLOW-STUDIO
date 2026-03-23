@@ -25,8 +25,8 @@ export default function LyricistDashboard() {
   const fetchData = async () => {
     try {
       const [beatRes, noteRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/tracks/type/beat'),
-        axios.get(`http://localhost:5000/api/lyrics/user/${userId}`)
+        axios.get('import.meta.env.VITE_API_URL/api/tracks/type/beat'),
+        axios.get(`import.meta.env.VITE_API_URL/api/lyrics/user/${userId}`)
       ]);
       setBeats(beatRes.data);
       setNotes(noteRes.data);
@@ -41,7 +41,7 @@ export default function LyricistDashboard() {
 
     setIsAiLoading(true);
     try {
-      const res = await axios.get(`http://localhost:5000/api/ai/rhymes/${lastWord}`);
+      const res = await axios.get(`import.meta.env.VITE_API_URL/api/ai/rhymes/${lastWord}`);
       setRhymes(res.data);
     } catch (err) { console.log("AI Rhyme Engine Offline"); }
     finally { setIsAiLoading(false); }
@@ -76,12 +76,12 @@ export default function LyricistDashboard() {
     setIsSaving(true);
     try {
       if (currentNote.id) {
-        await axios.put(`http://localhost:5000/api/lyrics/update/${currentNote.id}`, {
+        await axios.put(`import.meta.env.VITE_API_URL/api/lyrics/update/${currentNote.id}`, {
           title: currentNote.title || 'Untitled Draft',
           content: currentNote.content
         });
       } else {
-        const res = await axios.post('http://localhost:5000/api/lyrics/save', {
+        const res = await axios.post('import.meta.env.VITE_API_URL/api/lyrics/save', {
           title: currentNote.title || 'Untitled Draft',
           content: currentNote.content,
           creator: userId

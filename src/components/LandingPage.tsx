@@ -19,7 +19,7 @@ export default function LandingPage() {
   useEffect(() => {
     const fetchTrending = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/tracks/all');
+        const res = await axios.get('import.meta.env.VITE_API_URL/api/tracks/all');
         if (Array.isArray(res.data)) setTrendingPosts(res.data.slice(0, 4));
       } catch (err) { setTrendingPosts([]); }
     };

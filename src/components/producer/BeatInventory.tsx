@@ -12,7 +12,7 @@ export default function BeatInventory({ refreshTrigger }: { refreshTrigger: numb
   useEffect(() => {
     const fetchBeats = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/tracks/user/${user.id || user._id}`);
+        const res = await axios.get(`import.meta.env.VITE_API_URL/api/tracks/user/${user.id || user._id}`);
         setBeats(res.data.filter((t: any) => t.trackType === 'beat'));
       } catch (err) { console.error(err); }
     };
@@ -40,7 +40,7 @@ export default function BeatInventory({ refreshTrigger }: { refreshTrigger: numb
 
     try {
       const token = user.token;
-      await axios.delete(`http://localhost:5000/api/tracks/${trackId}`, {
+      await axios.delete(`import.meta.env.VITE_API_URL/api/tracks/${trackId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       

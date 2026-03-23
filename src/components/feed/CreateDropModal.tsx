@@ -51,7 +51,7 @@ export default function CreateDropModal({ onClose, onSuccess }: any) {
         data.append('file', file); 
       }
 
-      await axios.post('http://localhost:5000/api/feed/upload', data, {
+      await axios.post('import.meta.env.VITE_API_URL/api/feed/upload', data, {
         headers: { 
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${user.token}` 

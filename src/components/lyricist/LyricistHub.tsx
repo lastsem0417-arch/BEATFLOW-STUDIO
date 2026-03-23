@@ -29,7 +29,7 @@ export default function LyricistHub() {
     const fetchUsers = async () => {
       try {
         const token = currentUser.token;
-        const res = await axios.get('http://localhost:5000/api/users/all', {
+        const res = await axios.get('import.meta.env.VITE_API_URL/api/users/all', {
           headers: { Authorization: `Bearer ${token}` }
         });
         setAllUsers(res.data);
@@ -40,7 +40,7 @@ export default function LyricistHub() {
 
   useEffect(() => {
     if (!safeUserId) return;
-    socket = io('http://localhost:5000');
+    socket = io('import.meta.env.VITE_API_URL');
     socket.emit('join_room', safeUserId);
     
     socket.on('receive_message', (data) => {
@@ -57,12 +57,12 @@ export default function LyricistHub() {
       try {
         const token = currentUser.token;
         
-        const chatRes = await axios.get(`http://localhost:5000/api/chat/direct/${selectedUser._id}`, {
+        const chatRes = await axios.get(`import.meta.env.VITE_API_URL/api/chat/direct/${selectedUser._id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setChatMessages(chatRes.data);
 
-        const trackRes = await axios.get(`http://localhost:5000/api/tracks/user/${selectedUser._id}`, {
+        const trackRes = await axios.get(`import.meta.env.VITE_API_URL/api/tracks/user/${selectedUser._id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUserPortfolio(trackRes.data);
@@ -107,7 +107,7 @@ export default function LyricistHub() {
     socket.emit('send_message', messagePayload);
     
     try {
-      await axios.post('http://localhost:5000/api/chat/send', messagePayload, {
+      await axios.post('import.meta.env.VITE_API_URL/api/chat/send', messagePayload, {
          headers: { Authorization: `Bearer ${currentUser.token}` } 
       });
     } catch (err) { setReplyText(currentReply); }

@@ -16,7 +16,7 @@ export default function LyricistVault() {
   const fetchVault = async () => {
     try {
       const token = currentUser.token;
-      const res = await axios.get('http://localhost:5000/api/projects/my-vault', {
+      const res = await axios.get('import.meta.env.VITE_API_URL/api/projects/my-vault', {
         headers: { Authorization: `Bearer ${token}` }
       });
       // Sort by newest first
@@ -39,7 +39,7 @@ export default function LyricistVault() {
 
     try {
       const token = currentUser.token;
-      await axios.delete(`http://localhost:5000/api/projects/delete/${id}`, {
+      await axios.delete(`import.meta.env.VITE_API_URL/api/projects/delete/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setVaultItems(prev => prev.filter(item => item._id !== id));

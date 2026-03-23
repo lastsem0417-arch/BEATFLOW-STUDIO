@@ -36,12 +36,12 @@ export default function SmartSplitter() {
   }, [selectedRoomId]);
 
   useEffect(() => {
-    socketRef.current = io("http://localhost:5000");
+    socketRef.current = io("import.meta.env.VITE_API_URL");
 
     const fetchRealRooms = async () => {
       try {
         const config = { headers: { Authorization: `Bearer ${user.token}` } };
-        const res = await axios.get('http://localhost:5000/api/collab/rooms', config);
+        const res = await axios.get('import.meta.env.VITE_API_URL/api/collab/rooms', config);
         
         const dbRooms = Array.isArray(res.data) ? res.data : [];
         const formattedProjects = dbRooms.map(r => ({

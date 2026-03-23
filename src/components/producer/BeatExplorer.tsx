@@ -11,7 +11,7 @@ export default function BeatExplorer() {
   useEffect(() => {
     const fetchAllBeats = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/tracks/type/beat');
+        const res = await axios.get('import.meta.env.VITE_API_URL/api/tracks/type/beat');
         setAllBeats(res.data);
       } catch (err) { 
         console.error("Explorer fetch error:", err); 

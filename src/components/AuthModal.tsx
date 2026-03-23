@@ -83,7 +83,7 @@ export default function AuthModal({ role, onClose, onSuccess }: AuthModalProps) 
 
     try {
       const res = await axios.post(
-        `http://localhost:5000/api/auth/${endpoint}`, 
+        `import.meta.env.VITE_API_URL/api/auth/${endpoint}`, 
         { ...formData, role: role.toLowerCase() },
         { withCredentials: true, headers: { 'Content-Type': 'application/json' } }
       );

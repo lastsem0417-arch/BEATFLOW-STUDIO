@@ -28,7 +28,7 @@ export default function UploadPortal({ onUploadSuccess }: { onUploadSuccess: () 
     formData.append('trackType', 'beat');
 
     try {
-      await axios.post('http://localhost:5000/api/tracks/upload', formData, {
+      await axios.post('import.meta.env.VITE_API_URL/api/tracks/upload', formData, {
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total!);
           setProgress(percentCompleted);

@@ -15,7 +15,7 @@ export default function LyricistChat({ selectedUser, currentUser }: any) {
 
   useEffect(() => {
     if (!safeUserId) return;
-    socket = io('http://localhost:5000');
+    socket = io('import.meta.env.VITE_API_URL');
     socket.emit('join_room', safeUserId);
     
     socket.on('receive_message', (data) => {
@@ -32,7 +32,7 @@ export default function LyricistChat({ selectedUser, currentUser }: any) {
       if (!selectedUser) return;
       try {
         // 🔥 DM ROUTE USE KIYA HAI
-        const res = await axios.get(`http://localhost:5000/api/chat/direct/${selectedUser._id}`, {
+        const res = await axios.get(`import.meta.env.VITE_API_URL/api/chat/direct/${selectedUser._id}`, {
           headers: { Authorization: `Bearer ${currentUser.token}` }
         });
         setChatMessages(res.data);
@@ -60,7 +60,7 @@ export default function LyricistChat({ selectedUser, currentUser }: any) {
     socket.emit('send_message', messagePayload);
 
     try {
-      await axios.post('http://localhost:5000/api/chat/send', messagePayload, {
+      await axios.post('import.meta.env.VITE_API_URL/api/chat/send', messagePayload, {
         headers: { Authorization: `Bearer ${currentUser.token}` }
       });
     } catch (err) { setReplyText(currentReply); }

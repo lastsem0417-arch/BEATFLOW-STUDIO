@@ -19,7 +19,7 @@ export default function AnalyticsHeader() {
       if (!userId) return;
 
       try {
-        const res = await axios.get(`http://localhost:5000/api/tracks/user/${userId}`);
+        const res = await axios.get(`import.meta.env.VITE_API_URL/api/tracks/user/${userId}`);
         const userTracks = Array.isArray(res.data) ? res.data : [];
 
         const myBeatsCount = userTracks.filter((t: any) => t.trackType === 'beat').length;

@@ -54,11 +54,11 @@ export default function RapperDashboard() {
     const fetchDashboardData = async () => {
       try {
         const config = { headers: { Authorization: `Bearer ${user.token}` } };
-        const beatsRes = await axios.get('http://localhost:5000/api/tracks/type/beat', config);
+        const beatsRes = await axios.get('import.meta.env.VITE_API_URL/api/tracks/type/beat', config);
         setProducerBeats(Array.isArray(beatsRes.data) ? beatsRes.data : []);
 
         if (userId) {
-          const vaultRes = await axios.get('http://localhost:5000/api/projects/my-vault', config);
+          const vaultRes = await axios.get('import.meta.env.VITE_API_URL/api/projects/my-vault', config);
           setVaultProjects(Array.isArray(vaultRes.data) ? vaultRes.data : []);
         }
       } catch (err) { console.error("Data Fetch Error:", err); }
@@ -113,7 +113,7 @@ export default function RapperDashboard() {
         <button 
           onClick={() => {
             setIsDawOpen(false);
-            axios.get('http://localhost:5000/api/projects/my-vault', { headers: { Authorization: `Bearer ${user.token}` }})
+            axios.get('import.meta.env.VITE_API_URL/api/projects/my-vault', { headers: { Authorization: `Bearer ${user.token}` }})
               .then(res => setVaultProjects(Array.isArray(res.data) ? res.data : []))
               .catch(err => console.error(err));
           }} 

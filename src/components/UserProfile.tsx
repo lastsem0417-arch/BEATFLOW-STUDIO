@@ -33,14 +33,14 @@ export default function UserProfile() {
     const fetchProfileData = async () => {
       try {
         setLoading(true);
-        const userRes = await axios.get(`http://localhost:5000/api/users/${targetId}`);
+        const userRes = await axios.get(`import.meta.env.VITE_API_URL/api/users/${targetId}`);
         setProfileUser(userRes.data);
         
         if (userRes.data.followers?.includes(currentUserId)) {
           setIsFollowing(true);
         }
 
-        const postsRes = await axios.get(`http://localhost:5000/api/feed/user/${targetId}`);
+        const postsRes = await axios.get(`import.meta.env.VITE_API_URL/api/feed/user/${targetId}`);
         setUserPosts(postsRes.data);
       } catch (error) {
         console.error("Error loading profile:", error);
@@ -54,7 +54,7 @@ export default function UserProfile() {
 
   const handleFollowToggle = async () => {
     try {
-      await axios.post(`http://localhost:5000/api/users/${profileUser._id}/follow`, {}, {
+      await axios.post(`import.meta.env.VITE_API_URL/api/users/${profileUser._id}/follow`, {}, {
         headers: { Authorization: `Bearer ${loggedInUser.token}` }
       });
       setIsFollowing(!isFollowing);
@@ -121,7 +121,7 @@ export default function UserProfile() {
 
     // Server Update
     try {
-      await axios.post(`http://localhost:5000/api/feed/${post._id}/like`, {}, {
+      await axios.post(`import.meta.env.VITE_API_URL/api/feed/${post._id}/like`, {}, {
         headers: { Authorization: `Bearer ${loggedInUser.token}` }
       });
     } catch (err) { 

@@ -60,7 +60,7 @@ router.post('/upload', protect, upload.single('file'), async (req, res) => {
       lookingFor: lookingFor || 'Collaboration',
       bounty: bounty || 'TBD',
       lyricsText: lyricsText || '',
-      contentUrl: req.file ? `http://localhost:5000/uploads/${req.file.filename}` : null
+      contentUrl: req.file ? `import.meta.env.VITE_API_URL/uploads/${req.file.filename}` : null
     });
 
     await newPost.save();

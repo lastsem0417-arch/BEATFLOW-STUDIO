@@ -24,7 +24,7 @@ export default function CommentsDrawer({ post, onClose, onCommentAdded }: any) {
 
     setLoading(true);
     try {
-      const res = await axios.post(`http://localhost:5000/api/feed/${post._id}/comment`, { text }, {
+      const res = await axios.post(`import.meta.env.VITE_API_URL/api/feed/${post._id}/comment`, { text }, {
         headers: { Authorization: `Bearer ${loggedInUser.token}` }
       });
       

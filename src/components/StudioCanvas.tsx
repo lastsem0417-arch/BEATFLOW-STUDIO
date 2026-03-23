@@ -33,8 +33,8 @@ export default function StudioCanvas() {
   const fetchLibrary = async () => {
     try {
       const [vocalRes, beatRes] = await Promise.all([
-        axios.get(`http://localhost:5000/api/tracks/user/${userId}`),
-        axios.get(`http://localhost:5000/api/tracks/type/beat`)
+        axios.get(`import.meta.env.VITE_API_URL/api/tracks/user/${userId}`),
+        axios.get(`import.meta.env.VITE_API_URL/api/tracks/type/beat`)
       ]);
       setVaultTracks(vocalRes.data.filter((t: any) => t.trackType === 'vocal'));
       setLibraryBeats(beatRes.data);
@@ -112,7 +112,7 @@ export default function StudioCanvas() {
       formData.append('trackType', 'vocal');
       
       try {
-        const res = await axios.post('http://localhost:5000/api/tracks/upload', formData);
+        const res = await axios.post('import.meta.env.VITE_API_URL/api/tracks/upload', formData);
         await fetchLibrary();
         // Load recorded audio into the selected track
         setTracks(prev => prev.map(t => t.id === activeTrackId ? { ...t, audioUrl: res.data.audioUrl, title: res.data.title } : t));

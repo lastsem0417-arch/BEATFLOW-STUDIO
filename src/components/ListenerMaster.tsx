@@ -34,12 +34,12 @@ export default function ListenerMaster() {
       try {
         const token = currentUser.token;
         // Fetch Architects
-        const userRes = await axios.get('http://localhost:5000/api/users/all', { headers: { Authorization: `Bearer ${token}` } });
+        const userRes = await axios.get('import.meta.env.VITE_API_URL/api/users/all', { headers: { Authorization: `Bearer ${token}` } });
         const creators = userRes.data.filter((u: any) => u.role !== 'listener');
         setTopArchitects(creators.slice(0, 10));
 
         // Fetch Real Audio Posts from Feed
-        const feedRes = await axios.get('http://localhost:5000/api/feed', { headers: { Authorization: `Bearer ${token}` } });
+        const feedRes = await axios.get('import.meta.env.VITE_API_URL/api/feed', { headers: { Authorization: `Bearer ${token}` } });
         // Filter only posts that have audio
         const audioPosts = feedRes.data.filter((p: any) => p.contentUrl || p.audioUrl);
         setFeedTracks(audioPosts.reverse().slice(0, 4)); // Get top 4 newest beats/songs

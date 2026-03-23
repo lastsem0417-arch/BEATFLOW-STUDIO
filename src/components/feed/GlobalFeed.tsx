@@ -31,7 +31,7 @@ export default function GlobalFeed() {
   useEffect(() => {
     const fetchFeed = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/feed');
+        const res = await axios.get('import.meta.env.VITE_API_URL/api/feed');
         setPosts(res.data.reverse()); 
       } catch (error) {
         console.error("Feed error:", error);
@@ -113,7 +113,7 @@ export default function GlobalFeed() {
     }));
 
     try {
-      await axios.post(`http://localhost:5000/api/feed/${post._id}/like`, {}, {
+      await axios.post(`import.meta.env.VITE_API_URL/api/feed/${post._id}/like`, {}, {
         headers: { Authorization: `Bearer ${loggedInUser.token}` }
       });
     } catch (err) { console.error(err); }
@@ -131,7 +131,7 @@ export default function GlobalFeed() {
     if (!window.confirm("System Warning: Permanently delete this asset?")) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/admin/posts/${postId}`, {
+      await axios.delete(`import.meta.env.VITE_API_URL/api/admin/posts/${postId}`, {
         headers: { Authorization: `Bearer ${loggedInUser.token}` }
       });
       setPosts(posts.filter(p => p._id !== postId));

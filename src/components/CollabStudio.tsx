@@ -76,7 +76,7 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
     const fetchRoomData = async () => {
       try {
         const config = { headers: { Authorization: `Bearer ${user.token}` } };
-        const res = await axios.get(`http://localhost:5000/api/collab/rooms/${roomId}`, config);
+        const res = await axios.get(`import.meta.env.VITE_API_URL/api/collab/rooms/${roomId}`, config);
         const roomData = res.data.room || res.data.data || res.data; 
         if (roomData && roomData.chatHistory && roomData.chatHistory.length > 0) {
           setMessages([{ sender: 'System', text: `Restored session history.`, time: '', isSystem: true }, ...roomData.chatHistory]);
@@ -102,7 +102,7 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
       streamRef = stream;
       setLocalStream(stream);
 
-      socketRef.current = io("http://localhost:5000");
+      socketRef.current = io("import.meta.env.VITE_API_URL");
       socketRef.current.emit("join-room", { roomId, userDetails: user });
 
       socketRef.current.on("user-connected", (payload) => {
@@ -162,7 +162,7 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
     }).catch(err => {
       console.error("Camera error:", err);
       if (isMounted) {
-         socketRef.current = io("http://localhost:5000");
+         socketRef.current = io("import.meta.env.VITE_API_URL");
          socketRef.current.emit("join-room", { roomId, userDetails: user });
       }
     });

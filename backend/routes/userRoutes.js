@@ -43,7 +43,7 @@ router.put('/update-profile', protect, upload.single('profileImage'), async (req
     
     // Nayi photo
     if (req.file) {
-      user.profileImage = `http://localhost:5000/uploads/${req.file.filename}`;
+      user.profileImage = `import.meta.env.VITE_API_URL/uploads/${req.file.filename}`;
     }
 
     await user.save();

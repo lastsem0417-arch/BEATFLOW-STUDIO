@@ -17,7 +17,7 @@ export default function LyricistHome() {
         const token = currentUser.token;
         
         // 1. Fetch Vault Stats
-        const vaultRes = await axios.get('http://localhost:5000/api/projects/my-vault', {
+        const vaultRes = await axios.get('import.meta.env.VITE_API_URL/api/projects/my-vault', {
           headers: { Authorization: `Bearer ${token}` }
         });
         const projects = vaultRes.data;
@@ -31,7 +31,7 @@ export default function LyricistHome() {
         setStats({ totalProjects: projects.length, totalWords: wordCount });
 
         // 2. 🔥 FETCH REAL FEED DATA FOR COLLABS 🔥
-        const feedRes = await axios.get('http://localhost:5000/api/feed');
+        const feedRes = await axios.get('import.meta.env.VITE_API_URL/api/feed');
         // Filter out lyrics, only keep Beats/Audio where Lyricist can pitch
         const beatsOnly = feedRes.data.filter((post: any) => post.contentUrl).reverse().slice(0, 4);
         setRealCollabs(beatsOnly);

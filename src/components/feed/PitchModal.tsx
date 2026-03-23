@@ -22,7 +22,7 @@ export default function PitchModal({ post, onClose }: any) {
     setStatus('loading');
     
     try {
-      await axios.post(`http://localhost:5000/api/feed/${post._id}/pitch`, { proposal }, {
+      await axios.post(`import.meta.env.VITE_API_URL/api/feed/${post._id}/pitch`, { proposal }, {
         headers: { Authorization: `Bearer ${loggedInUser.token}` }
       });
       

@@ -60,9 +60,9 @@ export default function StudioMaster() {
       setSavedProjects(localProjects);
       try {
         const [vocalRes, beatRes, projectRes] = await Promise.all([
-          axios.get(`http://localhost:5000/api/tracks/user/${userId}`),
-          axios.get(`http://localhost:5000/api/tracks/type/beat`),
-          axios.get(`http://localhost:5000/api/projects/my-vault`, { headers: { Authorization: `Bearer ${user.token}` }}) 
+          axios.get(`import.meta.env.VITE_API_URL/api/tracks/user/${userId}`),
+          axios.get(`import.meta.env.VITE_API_URL/api/tracks/type/beat`),
+          axios.get(`import.meta.env.VITE_API_URL/api/projects/my-vault`, { headers: { Authorization: `Bearer ${user.token}` }}) 
         ]);
         setVaultTracks(vocalRes.data.filter((t: any) => t.trackType === 'vocal'));
         setLibraryBeats(beatRes.data);
@@ -395,7 +395,7 @@ export default function StudioMaster() {
     formData.append('trackType', 'vocal');
     
     try {
-      const res = await axios.post('http://localhost:5000/api/tracks/upload', formData);
+      const res = await axios.post('import.meta.env.VITE_API_URL/api/tracks/upload', formData);
       
       if (res.data.videoUrl) {
         setCloudVideoUrl(res.data.videoUrl); // Set global cloud URL
@@ -439,7 +439,7 @@ export default function StudioMaster() {
       setSavedProjects(updatedProjects);
       localStorage.setItem('beatflow_projects', JSON.stringify(updatedProjects));
       try { 
-          await axios.post('http://localhost:5000/api/projects/save', projectData, {
+          await axios.post('import.meta.env.VITE_API_URL/api/projects/save', projectData, {
               headers: { Authorization: `Bearer ${user.token}` }
           }); 
       } catch (e) {}
