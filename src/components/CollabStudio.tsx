@@ -5,20 +5,38 @@ import Peer from 'simple-peer';
 import axios from 'axios';
 import { RecordBars, DropBeat, WriteBars } from './collab/CollabTools'; 
 
+// 🔥 VITE PRODUCTION POLYFILLS FOR SIMPLE-PEER 🔥
+// Iske bina simple-peer Render/Vercel par crash ho jata hai
+if (typeof global === 'undefined') {
+  (window as any).global = window;
+}
+if (typeof process === 'undefined') {
+  (window as any).process = { env: {} };
+}
+
 interface CollabStudioProps { roomId: string; role: string; onLeave: () => void; }
 
 const VideoPeer = ({ peer, userDetails, mediaState, theme }: any) => {
   const ref = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
 
-  useEffect(() => { peer.on("stream", (s: MediaStream) => { setStream(s); }); }, [peer]);
+  useEffect(() => { 
+    peer.on("stream", (s: MediaStream) => { 
+      setStream(s); 
+    }); 
+  }, [peer]);
+  
   const isCamOff = mediaState?.cam === false;
 
-  useEffect(() => { if (!isCamOff && ref.current && stream) { ref.current.srcObject = stream; } }, [isCamOff, stream]);
+  useEffect(() => { 
+    if (!isCamOff && ref.current && stream) { 
+      ref.current.srcObject = stream; 
+    } 
+  }, [isCamOff, stream]);
 
   return (
     <div className="w-48 h-full bg-black rounded-2xl overflow-hidden relative shadow-lg shrink-0 border-[3px] transition-colors duration-300" style={{ borderColor: mediaState?.mic ? theme.accent : 'transparent' }}>
-      {isCamOff ? (
+      {isCamOff || !stream ? (
         <div className="w-full h-full bg-[#111] flex flex-col items-center justify-center relative">
           <img src={userDetails?.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userDetails?.username || 'Peer'}`} className="w-12 h-12 rounded-full grayscale opacity-80 mb-2 border-2 border-white/10 shadow-sm" alt="DP"/>
           <span className="text-[9px] font-mono text-white/50 uppercase tracking-widest">Camera Off</span>
@@ -47,10 +65,12 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
   const [isCamOn, setIsCamOn] = useState(false);
   const [isMicOn, setIsMicOn] = useState(false);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const localStreamRef = useRef<MediaStream | null>(null); // 🔥 Prevents React Stale Closure 🔥
+  
   const socketRef = useRef<Socket | null>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const [peers, setPeers] = useState<any[]>([]);
-  const peersRef = useRef<any[]>([]);
+  const peersRef = useRef<any[]>([]); // Synced with state
   
   const [sharedTracks, setSharedTracks] = useState<any[]>([]);
   const [playingTrackId, setPlayingTrackId] = useState<number | null>(null);
@@ -72,17 +92,18 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
     return () => ctx.revert();
   }, []);
 
+  // Chat & Shared Tracks History
   useEffect(() => {
     const fetchRoomData = async () => {
       try {
         const config = { headers: { Authorization: `Bearer ${user.token}` } };
         const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/collab/rooms/${roomId}`, config);
         const roomData = res.data.room || res.data.data || res.data; 
-        if (roomData && roomData.chatHistory && roomData.chatHistory.length > 0) {
+        if (roomData?.chatHistory?.length > 0) {
           setMessages([{ sender: 'System', text: `Restored session history.`, time: '', isSystem: true }, ...roomData.chatHistory]);
           scrollToBottom();
         }
-        if (roomData && roomData.canvasTracks && roomData.canvasTracks.length > 0) {
+        if (roomData?.canvasTracks?.length > 0) {
           setSharedTracks(roomData.canvasTracks);
         }
       } catch (err) { console.error("Failed to load session history", err); }
@@ -90,45 +111,64 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
     fetchRoomData();
   }, [roomId, user.token]);
 
+  // 🔥 PRODUCTION WEBRTC & ICE SERVERS 🔥
+  const peerConfig = {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:global.stun.twilio.com:3478' }
+    ]
+  };
+
+  // The Core WebRTC Engine
   useEffect(() => {
     let isMounted = true;
-    let streamRef: MediaStream | null = null;
-
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
-      if (!isMounted) { stream.getTracks().forEach(t => t.stop()); return; }
-      stream.getVideoTracks()[0].enabled = false;
-      stream.getAudioTracks()[0].enabled = false;
-      streamRef = stream;
-      setLocalStream(stream);
-
+    
+    // Function to initialize socket AFTER stream is ready (or faked)
+    const initializeSocket = (streamToUse: MediaStream) => {
       socketRef.current = io(import.meta.env.VITE_API_URL as string);
       
-      // Connection setup needed
       socketRef.current.on("connect", () => {
          socketRef.current?.emit("join-room", { roomId, userDetails: user });
       });
 
       socketRef.current.on("user-connected", (payload) => {
+        // I am in the room, a new user joined. I create the offer.
         if (!peersRef.current.find(p => p.peerID === payload.userId)) {
-           const peer = createPeer(payload.userId, socketRef.current!.id, stream, user);
-           peersRef.current.push({ peerID: payload.userId, peer, userDetails: payload.userDetails, mediaState: { cam: false, mic: false } });
+           const peer = new Peer({ initiator: true, trickle: false, stream: localStreamRef.current!, config: peerConfig });
+           
+           peer.on("signal", signal => { 
+             socketRef.current?.emit("sending-signal", { userToSignal: payload.userId, callerID: socketRef.current!.id, signal, userDetails: user }); 
+           });
+
+           const peerObj = { peerID: payload.userId, peer, userDetails: payload.userDetails, mediaState: { cam: false, mic: false } };
+           peersRef.current.push(peerObj);
            setPeers([...peersRef.current]);
+           
            setMessages(prev => [...prev, { sender: 'System', text: `${payload.userDetails.username || 'Artist'} joined the studio.`, time: new Date().toLocaleTimeString(), isSystem: true }]);
            scrollToBottom();
         }
       });
 
       socketRef.current.on("user-joined", payload => {
+        // I just joined, I receive an offer from someone already here.
         if (!peersRef.current.find(p => p.peerID === payload.callerID)) {
-           const peer = addPeer(payload.signal, payload.callerID, stream);
-           peersRef.current.push({ peerID: payload.callerID, peer, userDetails: payload.userDetails, mediaState: { cam: false, mic: false } });
+           const peer = new Peer({ initiator: false, trickle: false, stream: localStreamRef.current!, config: peerConfig });
+           
+           peer.on("signal", signal => { 
+             socketRef.current?.emit("returning-signal", { signal, callerID: payload.callerID }); 
+           });
+           
+           peer.signal(payload.signal); // Accept offer
+
+           const peerObj = { peerID: payload.callerID, peer, userDetails: payload.userDetails, mediaState: { cam: false, mic: false } };
+           peersRef.current.push(peerObj);
            setPeers([...peersRef.current]);
         }
       });
 
       socketRef.current.on("receiving-returned-signal", payload => {
         const item = peersRef.current.find(p => p.peerID === payload.id);
-        if(item) item.peer.signal(payload.signal);
+        if(item) item.peer.signal(payload.signal); // Accept answer
       });
 
       socketRef.current.on("receive-message", (msg) => {
@@ -149,9 +189,8 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
       socketRef.current.on("user-disconnected", (id) => {
         const peerObj = peersRef.current.find(p => p.peerID === id);
         if (peerObj) peerObj.peer.destroy();
-        const newPeers = peersRef.current.filter(p => p.peerID !== id);
-        peersRef.current = newPeers;
-        setPeers([...newPeers]);
+        peersRef.current = peersRef.current.filter(p => p.peerID !== id);
+        setPeers([...peersRef.current]);
       });
 
       socketRef.current.on("peer-media-toggled", (payload) => {
@@ -161,86 +200,72 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
           setPeers([...peersRef.current]); 
         }
       });
+    };
 
-    }).catch(err => {
-      console.error("Camera error:", err);
-      if (isMounted) {
-         socketRef.current = io(import.meta.env.VITE_API_URL as string);
-         socketRef.current.emit("join-room", { roomId, userDetails: user });
-      }
-    });
+    // 🔥 THE BLANK STREAM HACK 🔥
+    // Try to get real camera. If denied, create a fake blank stream so WebRTC doesn't crash!
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+      .then(stream => {
+        if (!isMounted) { stream.getTracks().forEach(t => t.stop()); return; }
+        stream.getVideoTracks().forEach(t => t.enabled = false);
+        stream.getAudioTracks().forEach(t => t.enabled = false);
+        localStreamRef.current = stream;
+        setLocalStream(stream);
+        initializeSocket(stream);
+      })
+      .catch(err => {
+        console.warn("Camera denied/unavailable. Using fallback blank stream.", err);
+        if (isMounted) {
+          // Fake audio track creation to keep simple-peer happy
+          const ctx = new AudioContext();
+          const dest = ctx.createMediaStreamDestination();
+          const blankStream = dest.stream;
+          localStreamRef.current = blankStream;
+          setLocalStream(blankStream);
+          initializeSocket(blankStream);
+        }
+      });
 
     return () => {
       isMounted = false;
       socketRef.current?.disconnect();
-      if (streamRef) streamRef.getTracks().forEach(t => t.stop());
+      if (localStreamRef.current) localStreamRef.current.getTracks().forEach(t => t.stop());
       if (audioInstanceRef.current) {
         audioInstanceRef.current.pause();
         audioInstanceRef.current = null;
       }
+      peersRef.current.forEach(p => p.peer.destroy());
     };
   }, [roomId]); 
 
+  // Local Video Attachment
   useEffect(() => {
-    if (isCamOn && localVideoRef.current && localStream) { localVideoRef.current.srcObject = localStream; }
+    if (isCamOn && localVideoRef.current && localStream) { 
+      localVideoRef.current.srcObject = localStream; 
+    }
   }, [isCamOn, localStream]);
-
-  // 🔥 THE MISSING PIECE FOR LIVE DEPLOYMENTS P2P 🔥
-  // STUN finds public IP. TURN relays video when firewalls block direct connection.
-  const peerConfig = {
-    iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
-      { urls: 'stun:stun2.l.google.com:19302' },
-      {
-        urls: "turn:openrelay.metered.ca:80",
-        username: "openrelayproject",
-        credential: "openrelayproject"
-      },
-      {
-        urls: "turn:openrelay.metered.ca:443",
-        username: "openrelayproject",
-        credential: "openrelayproject"
-      },
-      {
-        urls: "turn:openrelay.metered.ca:443?transport=tcp",
-        username: "openrelayproject",
-        credential: "openrelayproject"
-      }
-    ]
-  };
-
-  function createPeer(userToSignal: string, callerID: string, stream: MediaStream, userDetails: any) {
-    // config with peerConfig added here
-    const peer = new Peer({ initiator: true, trickle: false, stream, config: peerConfig });
-    peer.on("signal", signal => { socketRef.current?.emit("sending-signal", { userToSignal, callerID, signal, userDetails }); });
-    return peer;
-  }
-  
-  function addPeer(incomingSignal: any, callerID: string, stream: MediaStream) {
-    // config with peerConfig added here
-    const peer = new Peer({ initiator: false, trickle: false, stream, config: peerConfig });
-    peer.on("signal", signal => { socketRef.current?.emit("returning-signal", { signal, callerID }); });
-    peer.signal(incomingSignal);
-    return peer;
-  }
 
   const scrollToBottom = () => { setTimeout(() => { const chatBox = document.getElementById('studio-chat-box'); if (chatBox) chatBox.scrollTop = chatBox.scrollHeight; }, 50); };
 
   const toggleVideo = () => {
-    if (localStream) {
+    if (localStream && localStream.getVideoTracks().length > 0) {
       const videoTrack = localStream.getVideoTracks()[0];
       videoTrack.enabled = !isCamOn;
       setIsCamOn(!isCamOn);
       socketRef.current?.emit("toggle-media", { roomId, cam: !isCamOn, mic: isMicOn });
+    } else {
+      alert("Camera not found or permission denied.");
     }
   };
+
   const toggleAudio = () => {
-    if (localStream) {
+    if (localStream && localStream.getAudioTracks().length > 0) {
       const audioTrack = localStream.getAudioTracks()[0];
       audioTrack.enabled = !isMicOn;
       setIsMicOn(!isMicOn);
       socketRef.current?.emit("toggle-media", { roomId, cam: isCamOn, mic: !isMicOn });
+    } else {
+      alert("Microphone not found or permission denied.");
     }
   };
 
@@ -293,7 +318,6 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
       <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-[0.03] pointer-events-none mix-blend-multiply"></div>
       <div className="absolute top-0 right-0 w-[50vw] h-[50vw] blur-[150px] rounded-full pointer-events-none opacity-[0.05] -z-10" style={{ backgroundColor: theme.accent }}></div>
 
-      {/* --- 🎩 MAIN HEADER --- */}
       <header className="h-20 w-full px-8 flex items-center justify-between shrink-0 border-b z-20 bg-white" style={{ borderColor: theme.border }}>
          <div className="flex items-center gap-6">
             <div className="flex items-center gap-2 px-4 py-2 rounded-full shadow-sm bg-[#F4F3EF] border border-[#111]/10">
@@ -312,13 +336,8 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
          </div>
       </header>
 
-      {/* --- 🖥️ WORKSPACE PANES --- */}
       <div className="flex-1 w-full grid grid-cols-[1fr_320px] overflow-hidden z-10 h-[calc(100%-5rem)]">
-         
-         {/* 🎨 LEFT PANE: VIDEOS + CANVAS */}
          <div className="h-full flex flex-col border-r bg-[#FAF9F6] overflow-hidden" style={{ borderColor: theme.border }}>
-            
-            {/* 📹 THE VIDEO CALL MATRIX */}
             <div className="h-36 shrink-0 p-4 flex items-center gap-4 overflow-x-auto custom-scrollbar border-b bg-white relative z-20" style={{ borderColor: theme.border }}>
                <div className="w-48 h-full bg-black rounded-xl overflow-hidden relative shadow-md shrink-0 border-[2px] transition-colors duration-300" style={{ borderColor: isMicOn ? theme.accent : 'transparent' }}>
                  {isCamOn ? (
@@ -334,15 +353,13 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
                     <span className="text-[7px] font-black text-white uppercase tracking-widest truncate max-w-[80px]">You</span>
                  </div>
                </div>
+               
                {peers.map((peerObj, index) => (
                   <VideoPeer key={index} peer={peerObj.peer} userDetails={peerObj.userDetails} mediaState={peerObj.mediaState} theme={theme} />
                ))}
             </div>
 
-            {/* 🎼 THE SHARED CANVAS WRAPPER */}
             <div className="h-[calc(100%-9rem)] flex flex-col p-6 overflow-hidden">
-               
-               {/* Tools Header */}
                <div className="h-12 shrink-0 flex items-center justify-between mb-4">
                   <div>
                     <h3 className="text-2xl font-black tracking-tight text-[#111]">Shared Canvas</h3>
@@ -372,9 +389,7 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
                   </div>
                </div>
 
-               {/* 🔥 BULLETPROOF SCROLL CANVAS BOARD 🔥 */}
                <div className="flex-1 w-full bg-white rounded-2xl border shadow-sm relative overflow-hidden" style={{ borderColor: theme.border }}>
-                  
                   <div className="absolute top-0 left-0 right-0 h-8 border-b flex justify-between px-20 bg-[#F4F3EF] z-20" style={{ borderColor: theme.border }}>
                     {[0, 15, 30, 45, 60].map(s => <span key={s} className="text-[8px] font-mono opacity-40 border-l pl-2 pt-2" style={{ borderColor: theme.border }}>0:{s.toString().padStart(2, '0')}</span>)}
                   </div>
@@ -389,7 +404,6 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
                          <div className="flex flex-col gap-4 pb-10">
                            {sharedTracks.map((track, i) => (
                              <div key={track.id} className="flex items-center h-24 shrink-0 w-full bg-white rounded-xl border group/track hover:shadow-md transition-all relative overflow-hidden" style={{ borderColor: theme.border }}>
-                                
                                 <div className="w-40 shrink-0 h-full flex flex-col justify-center px-4 border-r relative z-10 bg-[#F9F9F9]" style={{ borderColor: theme.border }}>
                                   <span className="text-[10px] font-black uppercase tracking-widest mb-1 truncate" style={{ color: track.color }}>{track.type}</span>
                                   <span className="text-[9px] font-mono font-bold opacity-50 truncate">{track.owner}</span>
@@ -415,7 +429,6 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
                                      </div>
                                    )}
 
-                                   {/* 🔥 DOWNLOAD & DELETE ACTION OVERLAY 🔥 */}
                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 opacity-0 group-hover/track:opacity-100 transition-opacity bg-white/90 backdrop-blur-sm p-1.5 rounded-lg shadow-md border" style={{ borderColor: theme.border }}>
                                       <button onClick={() => handleDownloadTrack(track)} className="w-7 h-7 flex items-center justify-center rounded-md bg-green-50 text-green-600 hover:bg-green-100 transition-colors" title="Download Asset">
                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
