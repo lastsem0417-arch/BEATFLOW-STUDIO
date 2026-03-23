@@ -5,15 +5,6 @@ import Peer from 'simple-peer';
 import axios from 'axios';
 import { RecordBars, DropBeat, WriteBars } from './collab/CollabTools'; 
 
-// 🔥 VITE PRODUCTION POLYFILLS FOR SIMPLE-PEER 🔥
-// Iske bina simple-peer live deployment (Render/Vercel) par hamesha crash hota hai!
-if (typeof window !== 'undefined') {
-  (window as any).global = window;
-  if (!(window as any).process) {
-    (window as any).process = { env: {}, nextTick: (cb: any) => setTimeout(cb, 0) };
-  }
-}
-
 interface CollabStudioProps { roomId: string; role: string; onLeave: () => void; }
 
 const VideoPeer = ({ peer, userDetails, mediaState, theme }: any) => {
@@ -129,12 +120,9 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
     const initializeSocket = (streamToUse: MediaStream) => {
       socketRef.current = io(import.meta.env.VITE_API_URL as string);
       
-      // 🚨 BUG KILLED HERE: No waiting for "connect", emit join-room immediately! 
-      // Socket.io buffers this and sends it exactly when ready, preventing race conditions on live servers.
       socketRef.current.emit("join-room", { roomId, userDetails: user });
 
       socketRef.current.on("user-connected", (payload) => {
-        console.log("Remote user connected to my room!", payload);
         if (!peersRef.current.find(p => p.peerID === payload.userId)) {
            const peer = new Peer({ initiator: true, trickle: false, stream: localStreamRef.current!, config: peerConfig });
            
@@ -152,7 +140,6 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
       });
 
       socketRef.current.on("user-joined", payload => {
-        console.log("I received a signal from an existing user in the room!", payload);
         if (!peersRef.current.find(p => p.peerID === payload.callerID)) {
            const peer = new Peer({ initiator: false, trickle: false, stream: localStreamRef.current!, config: peerConfig });
            
@@ -216,7 +203,6 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
       .catch(err => {
         console.warn("Camera denied. Using blank stream fallback.", err);
         if (isMounted) {
-          // Fake audio track creation to keep simple-peer from crashing if permissions are denied
           const ctx = new window.AudioContext();
           const dest = ctx.createMediaStreamDestination();
           const blankStream = dest.stream;
