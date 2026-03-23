@@ -6,12 +6,12 @@ import axios from 'axios';
 import { RecordBars, DropBeat, WriteBars } from './collab/CollabTools'; 
 
 // 🔥 VITE PRODUCTION POLYFILLS FOR SIMPLE-PEER 🔥
-// Iske bina simple-peer Render/Vercel par crash ho jata hai
-if (typeof global === 'undefined') {
+// Iske bina simple-peer live deployment (Render/Vercel) par hamesha crash hota hai!
+if (typeof window !== 'undefined') {
   (window as any).global = window;
-}
-if (typeof process === 'undefined') {
-  (window as any).process = { env: {} };
+  if (!(window as any).process) {
+    (window as any).process = { env: {}, nextTick: (cb: any) => setTimeout(cb, 0) };
+  }
 }
 
 interface CollabStudioProps { roomId: string; role: string; onLeave: () => void; }
@@ -65,12 +65,12 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
   const [isCamOn, setIsCamOn] = useState(false);
   const [isMicOn, setIsMicOn] = useState(false);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  const localStreamRef = useRef<MediaStream | null>(null); // 🔥 Prevents React Stale Closure 🔥
+  const localStreamRef = useRef<MediaStream | null>(null); 
   
   const socketRef = useRef<Socket | null>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const [peers, setPeers] = useState<any[]>([]);
-  const peersRef = useRef<any[]>([]); // Synced with state
+  const peersRef = useRef<any[]>([]); 
   
   const [sharedTracks, setSharedTracks] = useState<any[]>([]);
   const [playingTrackId, setPlayingTrackId] = useState<number | null>(null);
@@ -92,7 +92,6 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
     return () => ctx.revert();
   }, []);
 
-  // Chat & Shared Tracks History
   useEffect(() => {
     const fetchRoomData = async () => {
       try {
@@ -111,28 +110,31 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
     fetchRoomData();
   }, [roomId, user.token]);
 
-  // 🔥 PRODUCTION WEBRTC & ICE SERVERS 🔥
+  // 🔥 TURN/STUN SERVERS FOR LIVE INTERNET DEPLOYMENTS 🔥
   const peerConfig = {
     iceServers: [
       { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:global.stun.twilio.com:3478' }
+      { urls: 'stun:global.stun.twilio.com:3478' },
+      {
+        urls: "turn:openrelay.metered.ca:80",
+        username: "openrelayproject",
+        credential: "openrelayproject"
+      }
     ]
   };
 
-  // The Core WebRTC Engine
   useEffect(() => {
     let isMounted = true;
     
-    // Function to initialize socket AFTER stream is ready (or faked)
     const initializeSocket = (streamToUse: MediaStream) => {
       socketRef.current = io(import.meta.env.VITE_API_URL as string);
       
-      socketRef.current.on("connect", () => {
-         socketRef.current?.emit("join-room", { roomId, userDetails: user });
-      });
+      // 🚨 BUG KILLED HERE: No waiting for "connect", emit join-room immediately! 
+      // Socket.io buffers this and sends it exactly when ready, preventing race conditions on live servers.
+      socketRef.current.emit("join-room", { roomId, userDetails: user });
 
       socketRef.current.on("user-connected", (payload) => {
-        // I am in the room, a new user joined. I create the offer.
+        console.log("Remote user connected to my room!", payload);
         if (!peersRef.current.find(p => p.peerID === payload.userId)) {
            const peer = new Peer({ initiator: true, trickle: false, stream: localStreamRef.current!, config: peerConfig });
            
@@ -150,7 +152,7 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
       });
 
       socketRef.current.on("user-joined", payload => {
-        // I just joined, I receive an offer from someone already here.
+        console.log("I received a signal from an existing user in the room!", payload);
         if (!peersRef.current.find(p => p.peerID === payload.callerID)) {
            const peer = new Peer({ initiator: false, trickle: false, stream: localStreamRef.current!, config: peerConfig });
            
@@ -158,7 +160,7 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
              socketRef.current?.emit("returning-signal", { signal, callerID: payload.callerID }); 
            });
            
-           peer.signal(payload.signal); // Accept offer
+           peer.signal(payload.signal);
 
            const peerObj = { peerID: payload.callerID, peer, userDetails: payload.userDetails, mediaState: { cam: false, mic: false } };
            peersRef.current.push(peerObj);
@@ -168,7 +170,7 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
 
       socketRef.current.on("receiving-returned-signal", payload => {
         const item = peersRef.current.find(p => p.peerID === payload.id);
-        if(item) item.peer.signal(payload.signal); // Accept answer
+        if(item) item.peer.signal(payload.signal); 
       });
 
       socketRef.current.on("receive-message", (msg) => {
@@ -202,8 +204,6 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
       });
     };
 
-    // 🔥 THE BLANK STREAM HACK 🔥
-    // Try to get real camera. If denied, create a fake blank stream so WebRTC doesn't crash!
     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
       .then(stream => {
         if (!isMounted) { stream.getTracks().forEach(t => t.stop()); return; }
@@ -214,10 +214,10 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
         initializeSocket(stream);
       })
       .catch(err => {
-        console.warn("Camera denied/unavailable. Using fallback blank stream.", err);
+        console.warn("Camera denied. Using blank stream fallback.", err);
         if (isMounted) {
-          // Fake audio track creation to keep simple-peer happy
-          const ctx = new AudioContext();
+          // Fake audio track creation to keep simple-peer from crashing if permissions are denied
+          const ctx = new window.AudioContext();
           const dest = ctx.createMediaStreamDestination();
           const blankStream = dest.stream;
           localStreamRef.current = blankStream;
@@ -238,7 +238,6 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
     };
   }, [roomId]); 
 
-  // Local Video Attachment
   useEffect(() => {
     if (isCamOn && localVideoRef.current && localStream) { 
       localVideoRef.current.srcObject = localStream; 
@@ -450,7 +449,6 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
             </div>
          </div>
 
-         {/* 💬 RIGHT PANE: LIVE CHAT */}
          <div className="w-full h-full flex flex-col bg-white overflow-hidden relative border-l" style={{ borderColor: theme.border }}>
             <div className="h-16 shrink-0 w-full border-b flex items-center justify-between px-6 bg-[#F4F3EF] z-10" style={{ borderColor: theme.border }}>
                <h3 className="text-[10px] font-black uppercase tracking-widest opacity-60">Group Comms</h3>
