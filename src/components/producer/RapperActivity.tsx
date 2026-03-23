@@ -15,7 +15,7 @@ export default function RapperActivity() {
 
   const fetchSessions = async () => {
     try {
-      const res = await axios.get('import.meta.env.VITE_API_URL/api/projects/all'); 
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/projects/all`); 
       setSessions(res.data.filter((s: any) => s.tracks && s.tracks.length > 0));
       setLoading(false);
     } catch (err) { setLoading(false); }

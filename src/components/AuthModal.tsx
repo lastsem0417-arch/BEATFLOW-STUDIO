@@ -76,14 +76,15 @@ export default function AuthModal({ role, onClose, onSuccess }: AuthModalProps) 
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+ const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const endpoint = isLogin ? 'login' : 'register';
     setLoading(true);
 
     try {
+      // 🚨 FIX 1: URL THEEK KIYA (Backticks ke andar ${} lagaya)
       const res = await axios.post(
-        `import.meta.env.VITE_API_URL/api/auth/${endpoint}`, 
+        `${import.meta.env.VITE_API_URL}/api/auth/${endpoint}`, 
         { ...formData, role: role.toLowerCase() },
         { withCredentials: true, headers: { 'Content-Type': 'application/json' } }
       );
@@ -91,10 +92,11 @@ export default function AuthModal({ role, onClose, onSuccess }: AuthModalProps) 
       const token = res.data.token;
       const userObj = res.data.user || res.data; 
       
-      const dbRole = userObj.role ? userObj.role.toLowerCase() : '';
+      // Backend se aane wala role
+      const dbRole = userObj.role ? userObj.role.toLowerCase() : role.toLowerCase();
       const portalRole = role.toLowerCase();
 
-      // 🔥 STRICT ROLE LOCK
+      // 🔥 STRICT ROLE LOCK (Login ke liye)
       if (isLogin && dbRole !== portalRole) {
         setLoading(false);
         gsap.fromTo(formRef.current, { x: -10 }, { x: 10, duration: 0.1, yoyo: true, repeat: 5, ease: "linear", clearProps: "x" });
@@ -102,19 +104,15 @@ export default function AuthModal({ role, onClose, onSuccess }: AuthModalProps) 
         return; 
       }
 
-      const userDataToSave = { ...userObj, token };
+      // Context mein save kiya
+      const userDataToSave = { ...userObj, token, role: dbRole }; // Role explicitly add kiya
       login(userDataToSave);
       
-      // Success Exit Animation
+      // 🚨 FIX 2: Double Navigation hataya! Ab sirf parent ko batayega ki success ho gaya.
       gsap.to(modalRef.current, {
         opacity: 0, scale: 1.02, filter: 'blur(5px)', duration: 0.5, ease: "power4.inOut",
         onComplete: () => {
-          onSuccess(res.data);
-          if (dbRole === 'rapper') navigate('/studio/rapper');
-          else if (dbRole === 'producer') navigate('/studio/producer');
-          else if (dbRole === 'lyricist') navigate('/studio/lyricist');
-          else if (dbRole === 'admin') navigate('/admin');
-          else navigate('/'); 
+          onSuccess(res.data); // Bas ye call hoga, navigation RoleSelection karega!
         }
       });
 

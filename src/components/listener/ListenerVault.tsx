@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAudio } from '../../context/AudioContext';
 
+// 🔥 VITE ENV API URL FETCH 🔥
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function ListenerVault() {
   const [vaultTracks, setVaultTracks] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -16,9 +19,12 @@ export default function ListenerVault() {
   useEffect(() => {
     const fetchVault = async () => {
       try {
-        const res = await axios.get('import.meta.env.VITE_API_URL/api/feed');
+        // 🚨 FIX: URL Syntax and Array Safety
+        const res = await axios.get(`${BACKEND_URL}/api/feed`);
+        const feedData = Array.isArray(res.data) ? res.data : (res.data.posts || []);
+        
         // Keep only tracks the current user has liked
-        const likedTracks = res.data.filter((track: any) => track.likes?.includes(userId));
+        const likedTracks = feedData.filter((track: any) => track.likes?.includes(userId));
         setVaultTracks(likedTracks);
       } catch (err) { 
         console.error("Error fetching vault:", err); 
@@ -102,7 +108,7 @@ export default function ListenerVault() {
                 <div 
                   key={track._id} 
                   onClick={() => handleInteraction(track)} 
-                  // 🔥 PREMIUM LIGHT CARD 🔥 (Kept exact same as your requested UI)
+                  // 🔥 PREMIUM LIGHT CARD 🔥
                   className={`bg-white border p-6 lg:p-8 rounded-[2.5rem] cursor-pointer transition-all duration-500 group flex flex-col ${isThisPlaying ? 'shadow-[0_20px_50px_rgba(107,122,229,0.15)] -translate-y-2' : 'border-[#0A1128]/5 hover:border-[#6B7AE5]/30 hover:-translate-y-2 hover:shadow-[0_15px_40px_rgba(0,0,0,0.05)]'}`}
                   style={{ borderColor: isThisPlaying ? roleColor : undefined }}
                 >
@@ -113,7 +119,7 @@ export default function ListenerVault() {
                         /* --- AUDIO VIEW (BEATS/RAPS) --- */
                         <>
                           <img 
-                            src={track.creatorProfileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${track.creatorId || track.creatorName}`} 
+                            src={track.coverImage || track.creatorProfileImage || `https://api.dicebear.com/7.x/shapes/svg?seed=${track._id}`} 
                             className={`w-full h-full object-cover transition-all duration-700 ${isThisPlaying ? 'opacity-100 scale-110' : 'opacity-80 group-hover:opacity-100 group-hover:scale-105'}`} 
                             alt="Track Cover" 
                           />
@@ -152,7 +158,7 @@ export default function ListenerVault() {
                              {isExpandedLyric && <span className="text-[8px] font-black uppercase tracking-widest text-[#0A1128]/30">Scroll to read</span>}
                            </div>
                            <p className={`font-serif italic text-[#0A1128]/80 text-sm leading-relaxed ${isExpandedLyric ? 'whitespace-pre-wrap' : 'line-clamp-6'}`}>
-                             "{track.lyricsText}"
+                             "{track.lyricsText || track.description}"
                            </p>
                            
                            {/* Fade out text at the bottom if not expanded */}
@@ -178,7 +184,7 @@ export default function ListenerVault() {
                             </p>
                          </div>
                          
-                         <button onClick={(e) => { e.stopPropagation(); /* Optional unlike logic */ }} className="w-10 h-10 shrink-0 flex items-center justify-center bg-[#F4F5F7] rounded-full border border-[#0A1128]/5 text-[#E63946] group-hover:bg-[#E63946] group-hover:text-white transition-colors shadow-sm" title="Favorited">
+                         <button onClick={(e) => { e.stopPropagation(); }} className="w-10 h-10 shrink-0 flex items-center justify-center bg-[#F4F5F7] rounded-full border border-[#0A1128]/5 text-[#E63946] group-hover:bg-[#E63946] group-hover:text-white transition-colors shadow-sm" title="Favorited">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
                          </button>
                        </div>
@@ -189,7 +195,6 @@ export default function ListenerVault() {
           </div>
       )}
 
-      {/* Keep your scrollbar styles intact */}
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }

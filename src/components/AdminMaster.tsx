@@ -25,8 +25,8 @@ export default function AdminMaster() {
       try {
         const config = { headers: { Authorization: `Bearer ${loggedInUser.token}` } };
         const [statsRes, usersRes] = await Promise.all([
-          axios.get('import.meta.env.VITE_API_URL/api/admin/stats', config),
-          axios.get('import.meta.env.VITE_API_URL/api/admin/users', config)
+          axios.get(`${import.meta.env.VITE_API_URL}/api/admin/stats`, config),
+          axios.get(`${import.meta.env.VITE_API_URL}/api/admin/users`, config)
         ]);
         setStats(statsRes.data);
         setUsers(usersRes.data);

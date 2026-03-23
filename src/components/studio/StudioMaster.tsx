@@ -20,8 +20,8 @@ export default function StudioMaster() {
   const audioChunksRef = useRef<Blob[]>([]);
   
   // 🔥 VIDEO RECORDING STATES 🔥
-  const [sessionVideoUrl, setSessionVideoUrl] = useState<string | null>(null); // Local Download Link
-  const [cloudVideoUrl, setCloudVideoUrl] = useState<string | null>(null); // Vault Database Link
+  const [sessionVideoUrl, setSessionVideoUrl] = useState<string | null>(null);
+  const [cloudVideoUrl, setCloudVideoUrl] = useState<string | null>(null);
   const [isWebcamActive, setIsWebcamActive] = useState(false);
 
   // --- AUDIO FX REFS ---
@@ -59,10 +59,11 @@ export default function StudioMaster() {
       const localProjects = JSON.parse(localStorage.getItem('beatflow_projects') || '[]');
       setSavedProjects(localProjects);
       try {
+        // 🚨 FIX: ADDED TEMPLATE LITERALS `${}` TO ALL API CALLS 🚨
         const [vocalRes, beatRes, projectRes] = await Promise.all([
-          axios.get(`import.meta.env.VITE_API_URL/api/tracks/user/${userId}`),
-          axios.get(`import.meta.env.VITE_API_URL/api/tracks/type/beat`),
-          axios.get(`import.meta.env.VITE_API_URL/api/projects/my-vault`, { headers: { Authorization: `Bearer ${user.token}` }}) 
+          axios.get(`${import.meta.env.VITE_API_URL}/api/tracks/user/${userId}`),
+          axios.get(`${import.meta.env.VITE_API_URL}/api/tracks/type/beat`),
+          axios.get(`${import.meta.env.VITE_API_URL}/api/projects/my-vault`, { headers: { Authorization: `Bearer ${user.token}` }}) 
         ]);
         setVaultTracks(vocalRes.data.filter((t: any) => t.trackType === 'vocal'));
         setLibraryBeats(beatRes.data);
@@ -232,7 +233,6 @@ export default function StudioMaster() {
     const wavBlob = bufferToWave(renderedBuffer, renderedBuffer.length);
     const downloadAudioUrl = window.URL.createObjectURL(wavBlob);
     
-    // 🔥 FIX: APPEND LINK TO DOM TO FORCE BROWSER DOWNLOAD 🔥
     const audioLink = document.createElement('a');
     audioLink.style.display = 'none';
     audioLink.href = downloadAudioUrl;
@@ -241,7 +241,7 @@ export default function StudioMaster() {
     audioLink.click();
     document.body.removeChild(audioLink);
 
-    // 2. EXPORT SESSION VIDEO (With Delay and DOM Append)
+    // 2. EXPORT SESSION VIDEO
     if (sessionVideoUrl) {
       setTimeout(() => {
         const videoLink = document.createElement('a');
@@ -251,7 +251,7 @@ export default function StudioMaster() {
         document.body.appendChild(videoLink);
         videoLink.click();
         document.body.removeChild(videoLink);
-      }, 1500); // 1.5 seconds delay so the browser doesn't block it as a popup
+      }, 1500); 
     }
   };
 
@@ -327,7 +327,6 @@ export default function StudioMaster() {
     });
   };
 
-  // 🔥 TOGGLE RECORD (ROBUST MIME TYPE HANDLING) 🔥
   const toggleRecord = async () => {
     if (isRecording) { stopEngine(); } 
     else {
@@ -340,7 +339,6 @@ export default function StudioMaster() {
         setIsWebcamActive(true);
         audioChunksRef.current = [];
 
-        // Check browser compatibility for video format
         let options = { mimeType: 'video/webm' };
         if (MediaRecorder.isTypeSupported('video/webm; codecs=vp9,opus')) {
             options = { mimeType: 'video/webm; codecs=vp9,opus' };
@@ -375,19 +373,15 @@ export default function StudioMaster() {
     }
   };
 
-  // 🔥 UPLOAD TO CLOUDINARY 🔥
   const handleUploadTrack = async () => {
     setTracks(prev => prev.map(t => t.id === activeTrackId ? { ...t, isProcessing: true } : t));
     
-    // Create Blob from chunks
     const mime = mediaRecorderRef.current?.mimeType || 'video/webm';
     const mediaBlob = new Blob(audioChunksRef.current, { type: mime });
     
-    // Set for local download immediately
     const videoUrl = URL.createObjectURL(mediaBlob);
     setSessionVideoUrl(videoUrl);
 
-    // Upload to Backend/Cloudinary
     const formData = new FormData();
     formData.append('audio', mediaBlob, 'studio_take.webm'); 
     formData.append('title', `Take_${Math.floor(Math.random()*1000)}`);
@@ -395,17 +389,17 @@ export default function StudioMaster() {
     formData.append('trackType', 'vocal');
     
     try {
-      const res = await axios.post('import.meta.env.VITE_API_URL/api/tracks/upload', formData);
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/tracks/upload`, formData);
       
       if (res.data.videoUrl) {
-        setCloudVideoUrl(res.data.videoUrl); // Set global cloud URL
+        setCloudVideoUrl(res.data.videoUrl);
       }
 
       setTracks(prev => prev.map(t => t.id === activeTrackId ? { 
         ...t, 
         isProcessing: false, 
         audioUrl: res.data.audioUrl, 
-        videoUrl: res.data.videoUrl, // Keep link directly on the track
+        videoUrl: res.data.videoUrl, 
         title: res.data.title, 
         startTime: 0, 
         trimStart: 0, 
@@ -418,13 +412,11 @@ export default function StudioMaster() {
     audioChunksRef.current = [];
   };
 
-  // 🔥 BULLETPROOF SAVE TO VAULT 🔥
   const handleModalAction = async () => {
     if (modalConfig.type === 'save') {
       if (!tempProjectName.trim()) return;
       setCurrentProjectName(tempProjectName);
       
-      // Grab Video URL securely (from state OR directly from the uploaded tracks)
       const finalVideoUrl = cloudVideoUrl || tracks.find(t => t.videoUrl)?.videoUrl || null;
 
       const projectData = { 
@@ -432,14 +424,14 @@ export default function StudioMaster() {
         name: tempProjectName, 
         creator: userId, 
         tracks: tracks,
-        videoUrl: finalVideoUrl // THIS SAVES TO MONGODB!
+        videoUrl: finalVideoUrl 
       };
       
       const updatedProjects = [projectData, ...savedProjects];
       setSavedProjects(updatedProjects);
       localStorage.setItem('beatflow_projects', JSON.stringify(updatedProjects));
       try { 
-          await axios.post('import.meta.env.VITE_API_URL/api/projects/save', projectData, {
+          await axios.post(`${import.meta.env.VITE_API_URL}/api/projects/save`, projectData, {
               headers: { Authorization: `Bearer ${user.token}` }
           }); 
       } catch (e) {}
@@ -479,7 +471,6 @@ export default function StudioMaster() {
   const loadTrackFromLibrary = (url: string, title: string, type: string) => setTracks(tracks.map(t => t.id === activeTrackId ? { ...t, audioUrl: url, title: title, type: type, startTime: 0, trimStart: 0, duration: 20 } : t));
   const applyPreset = (presetId: string) => setTracks(tracks.map(t => t.id === activeTrackId ? { ...t, preset: presetId } : t));
 
-  // 🔥 GSAP ENTRANCE ANIMATION 🔥
   useLayoutEffect(() => {
     let ctx = gsap.context(() => {
       gsap.fromTo(containerRef.current, 
@@ -490,7 +481,6 @@ export default function StudioMaster() {
     return () => ctx.revert();
   }, []);
 
-  // Determine if we have footage ready to save/view
   const hasFootage = sessionVideoUrl || cloudVideoUrl || tracks.some(t => t.videoUrl);
 
   return (

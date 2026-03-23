@@ -91,15 +91,19 @@ export default function RoleSelection() {
     setShowAuth(true);
   };
 
-  const handleAuthSuccess = (data: any) => {
-    const userData = { ...(data.user || data), token: data.token };
+const handleAuthSuccess = (data: any) => {
+    // Backend se aane wale role ko prioritize karo, warna selectedRole use karo
+    const roleStr = (data.role || data.user?.role || selectedRole).toLowerCase();
+    
+    // AuthContext ko update karo
+    const userData = { ...(data.user || data), token: data.token, role: roleStr };
     login(userData);
     setShowAuth(false);
     
+    // Smooth cinematic transition and navigate
     gsap.to(containerRef.current, { 
       opacity: 0, scale: 1.05, filter: "blur(10px)", duration: 0.8, ease: "power2.inOut", 
       onComplete: () => {
-        const roleStr = (userData.role || selectedRole).toLowerCase();
         if (roleStr === "listener") navigate("/feed");
         else navigate(`/studio/${roleStr}`);
       }

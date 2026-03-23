@@ -14,11 +14,15 @@ export default function NotificationBell() {
   const fetchNotifications = async () => {
     if (!loggedInUser.token) return;
     try {
-      const res = await axios.get('import.meta.env.VITE_API_URL/api/notifications', {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/notifications`, {
         headers: { Authorization: `Bearer ${loggedInUser.token}` }
       });
-      setNotifications(res.data);
-      const unread = res.data.filter((n: any) => !n.isRead).length;
+      
+      // 🔥 FIX: Safe array extraction
+      const notifsArray = Array.isArray(res.data) ? res.data : (res.data.notifications || []);
+      
+      setNotifications(notifsArray);
+      const unread = notifsArray.filter((n: any) => !n.isRead).length;
       setUnreadCount(unread);
     } catch (err) {
       console.error("Error fetching notifications", err);
@@ -33,7 +37,7 @@ export default function NotificationBell() {
     setIsOpen(true);
     if (unreadCount > 0) {
       try {
-        await axios.put('import.meta.env.VITE_API_URL/api/notifications/mark-read', {}, {
+        await axios.put(`${import.meta.env.VITE_API_URL}/api/notifications/mark-read`, {}, {
           headers: { Authorization: `Bearer ${loggedInUser.token}` }
         });
         setUnreadCount(0);

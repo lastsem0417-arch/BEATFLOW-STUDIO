@@ -25,7 +25,7 @@ export default function LyricistDashboard() {
   const fetchData = async () => {
     try {
       const [beatRes, noteRes] = await Promise.all([
-        axios.get('import.meta.env.VITE_API_URL/api/tracks/type/beat'),
+        axios.get(`${import.meta.env.VITE_API_URL}/api/tracks/type/beat`),
         axios.get(`import.meta.env.VITE_API_URL/api/lyrics/user/${userId}`)
       ]);
       setBeats(beatRes.data);
@@ -81,7 +81,7 @@ export default function LyricistDashboard() {
           content: currentNote.content
         });
       } else {
-        const res = await axios.post('import.meta.env.VITE_API_URL/api/lyrics/save', {
+        const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/lyrics/save`, {
           title: currentNote.title || 'Untitled Draft',
           content: currentNote.content,
           creator: userId

@@ -16,6 +16,9 @@ interface Collaborator {
   color: string;
 }
 
+// 🔥 VITE ENV API URL FETCH 🔥
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function SmartSplitter() {
   const user = JSON.parse(sessionStorage.getItem('beatflow_user') || '{}');
   const socketRef = useRef<Socket | null>(null);
@@ -36,12 +39,14 @@ export default function SmartSplitter() {
   }, [selectedRoomId]);
 
   useEffect(() => {
-    socketRef.current = io("import.meta.env.VITE_API_URL");
+    // 🚨 FIX: Socket Connection Dynamic URL
+    socketRef.current = io(BACKEND_URL);
 
     const fetchRealRooms = async () => {
       try {
         const config = { headers: { Authorization: `Bearer ${user.token}` } };
-        const res = await axios.get('import.meta.env.VITE_API_URL/api/collab/rooms', config);
+        // 🚨 FIX: Axios Dynamic URL
+        const res = await axios.get(`${BACKEND_URL}/api/collab/rooms`, config);
         
         const dbRooms = Array.isArray(res.data) ? res.data : [];
         const formattedProjects = dbRooms.map(r => ({
@@ -140,13 +145,11 @@ export default function SmartSplitter() {
   const totalAllocated = collaborators.reduce((sum, c) => sum + c.split, 0) + platformFee;
   const remainingSplit = 100 - totalAllocated;
 
-  // 🔥 THE FIX: SLIDERS ARE NOW COMPLETELY FREE TO MOVE 🔥
   const handleSplitChange = (userIdToChange: string, newSplit: number) => {
     if (contractStatus !== 'draft' || !isOwner) return; 
     
     setCollaborators(prev => prev.map(c => {
       if (c.userId === userIdToChange) {
-        // Slider HTML ensures newSplit max is 80, no strict math limits here anymore!
         return { ...c, split: newSplit };
       }
       return c;

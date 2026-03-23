@@ -1,147 +1,115 @@
-import React, { useState } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { io } from 'socket.io-client';
 
-export default function PitchModal({ post, onClose }: any) {
-  const [proposal, setProposal] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const loggedInUser = JSON.parse(sessionStorage.getItem('beatflow_user') || '{}');
+// 🔥 VITE ENV API URL FETCH 🔥
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-  // 🔥 DYNAMIC ROLE THEME (Executive Colors) 🔥
-  const role = loggedInUser.role?.toLowerCase() || 'producer';
-  const getRoleTheme = () => {
-    if (role === 'rapper') return { hex: '#E63946', shadow: 'rgba(230,57,70,0.3)' }; // Crimson
-    if (role === 'lyricist') return { hex: '#10B981', shadow: 'rgba(16,185,129,0.3)' }; // Emerald
-    if (role === 'listener') return { hex: '#2563EB', shadow: 'rgba(37,99,235,0.3)' }; // Royal Blue
-    return { hex: '#D4AF37', shadow: 'rgba(212,175,55,0.3)' }; // Gold for Producer
-  };
-  const theme = getRoleTheme();
+export default function GhostwriterPad({ selectedUser, currentUser }: any) {
+  const [draftLyrics, setDraftLyrics] = useState("");
+  const [isSavingLyrics, setIsSavingLyrics] = useState(false);
+  const [userPortfolio, setUserPortfolio] = useState<any[]>([]);
+  const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
+  const [isAiLoading, setIsAiLoading] = useState(false);
 
-  const handleSendPitch = async () => {
-    if (!proposal.trim()) return;
-    setStatus('loading');
-    
-    try {
-      await axios.post(`import.meta.env.VITE_API_URL/api/feed/${post._id}/pitch`, { proposal }, {
-        headers: { Authorization: `Bearer ${loggedInUser.token}` }
-      });
-      
-      // Smooth Success State
-      setStatus('success');
-      setTimeout(() => {
-        onClose();
-      }, 1500);
+  useEffect(() => {
+    const loadContext = async () => {
+      try {
+        // 🚨 FIX: URL Syntax Fixed
+        const res = await axios.get(`${BACKEND_URL}/api/tracks/user/${selectedUser._id}`, { 
+            headers: { Authorization: `Bearer ${currentUser.token}` } 
+        });
+        setUserPortfolio(res.data);
+      } catch (err) {}
+    };
+    if (selectedUser) loadContext();
+  }, [selectedUser, currentUser.token]);
 
-    } catch (err) { 
-      setStatus('error');
-      setTimeout(() => setStatus('idle'), 3000);
-    }
-  };
+  const togglePlay = (trackId: string) => { setPlayingTrackId(playingTrackId === trackId ? null : trackId); };
 
-  return createPortal(
-    <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 sm:p-8 font-sans select-none overflow-hidden text-[#111111]">
-      
-      {/* 🌫️ Premium Frosted Backdrop Blur */}
-      <div 
-        className="absolute inset-0 bg-[#111111]/40 backdrop-blur-md animate-in fade-in duration-500 transition-opacity" 
-        onClick={status === 'loading' ? undefined : onClose}
-      ></div>
-      
-      {/* 💼 The Executive Modal Card */}
-      <div className="relative w-full max-w-2xl bg-white border border-[#111111]/5 rounded-[3rem] p-10 md:p-14 shadow-[0_40px_80px_rgba(0,0,0,0.2)] animate-in zoom-in-[0.98] slide-in-from-bottom-8 fade-in duration-700 ease-[cubic-bezier(0.76,0,0.24,1)] overflow-hidden">
-        
-        {/* Dynamic Ambient Glow inside the modal */}
-        <div 
-          className="absolute top-[-20%] right-[-10%] w-96 h-96 blur-[100px] rounded-full pointer-events-none -z-10 opacity-15 transition-colors duration-1000" 
-          style={{ backgroundColor: theme.hex }}
-        ></div>
-        
-        {/* ✕ Close Button */}
-        <button 
-          onClick={onClose}
-          disabled={status === 'loading'}
-          className="absolute top-10 right-10 w-12 h-12 rounded-full border border-[#111111]/10 bg-[#F4F5F7] flex items-center justify-center text-[#111111]/40 hover:text-[#E63946] hover:bg-white hover:border-[#E63946]/30 hover:shadow-sm transition-all duration-300 active:scale-95 disabled:opacity-50 group z-20"
-          title="Cancel Pitch"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:rotate-90 transition-transform duration-500"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-
-        {/* 🎩 Editorial Header */}
-        <div className="mb-12 pr-12 relative z-10">
-           <h3 className="text-4xl md:text-5xl font-serif italic text-[#111111] leading-tight tracking-tight mb-3">Initiate Pitch</h3>
-           <p className="text-[9px] uppercase tracking-[0.4em] text-[#111111]/50 font-mono font-black flex items-center gap-2">
-             <span className="w-1.5 h-1.5 rounded-full animate-pulse shadow-sm" style={{ backgroundColor: theme.hex, boxShadow: `0 0 10px ${theme.hex}` }}></span> 
-             Target: <span style={{ color: theme.hex }}>{post.title}</span> by {post.creatorName}
-           </p>
-        </div>
-
-        {/* 📝 Input Section */}
-        <div className="mb-10 relative z-10">
-          <label className="text-[10px] uppercase tracking-[0.3em] font-black mb-4 flex items-center gap-2 font-mono text-[#111111]/40 ml-2">
-             Terms & Sonic Vision
-          </label>
+  // 🔥 SEND BARS AS A MASSIVE DM 🔥
+  const pushLyricsToProject = async () => {
+      if (!draftLyrics.trim()) return alert("Write something first!");
+      setIsSavingLyrics(true);
+      try {
+          const messagePayload = {
+              senderId: currentUser.id || currentUser._id, 
+              receiverId: selectedUser._id, 
+              text: "🔥 [GHOSTWRITTEN BARS]:\n\n" + draftLyrics,
+              timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
           
-          <div className="relative group">
-            <textarea 
-              value={proposal}
-              onChange={(e) => setProposal(e.target.value)}
-              placeholder="Define terms: 50/50 Royalty split, lyrical direction, or production credits..."
-              className="w-full h-40 bg-[#F4F5F7] border border-[#111111]/10 rounded-[2rem] p-6 text-[#111111] text-sm md:text-base outline-none transition-all duration-500 resize-none shadow-inner placeholder:text-[#111111]/30 font-serif italic focus:bg-white custom-scrollbar"
-              data-lenis-prevent="true"
-              disabled={status === 'loading' || status === 'success'}
-              onFocus={(e) => { e.target.style.borderColor = theme.hex; e.target.style.boxShadow = `0 0 0 4px ${theme.hex}15`; }}
-              onBlur={(e) => { e.target.style.borderColor = 'rgba(17,17,17,0.1)'; e.target.style.boxShadow = 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)'; }}
-            />
-          </div>
+          // 🚨 FIX: Socket Connection & Axios URL Syntax
+          const tempSocket = io(BACKEND_URL);
+          tempSocket.emit('send_message', messagePayload);
+          await axios.post(`${BACKEND_URL}/api/chat/send`, messagePayload, { headers: { Authorization: `Bearer ${currentUser.token}` } });
+          
+          setTimeout(() => { 
+              tempSocket.disconnect(); 
+              setIsSavingLyrics(false); 
+              setDraftLyrics(""); // Clear pad after sending
+          }, 1000);
+      } catch(e) { setIsSavingLyrics(false); alert("Failed to send lyrics."); }
+  };
 
-          {/* Error Message */}
-          {status === 'error' && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-100 rounded-xl text-center relative overflow-hidden animate-in fade-in">
-              <div className="absolute top-0 left-0 w-1 h-full bg-[#E63946]"></div>
-              <span className="text-[9px] uppercase font-black tracking-widest text-[#E63946] font-mono">Transmission Failed. Network Interference.</span>
+  const triggerAIGhostwriter = () => {
+      setIsAiLoading(true);
+      setTimeout(() => {
+         const newBars = "\n\n[AI SUGGESTION]\nWe breakin' the mold, no chains on my soul,\nGot the Midas touch, turn the dust into gold.";
+         setDraftLyrics(prev => prev + newBars);
+         setIsAiLoading(false);
+      }, 1500);
+  };
+
+  return (
+    <div className="flex-1 bg-transparent p-10 flex flex-col relative z-10">
+        
+        {/* AUDIO BAR */}
+        {userPortfolio.length > 0 && (
+            <div className="mb-8 flex gap-4 overflow-x-auto custom-scrollbar pb-2">
+                {userPortfolio.map(track => (
+                    <div key={track._id} className="flex-shrink-0 w-64 bg-[#111] border border-white/10 p-3 rounded-2xl flex items-center justify-between shadow-lg">
+                        <div className="overflow-hidden pr-2">
+                            <h4 className="text-xs text-white font-bold truncate">{track.title}</h4>
+                            <p className="text-[8px] uppercase tracking-widest text-emerald-500 mt-1">{track.trackType} Reference</p>
+                        </div>
+                        <button onClick={() => togglePlay(track._id)} className="text-emerald-400 w-10 h-10 rounded-full bg-emerald-600/10 hover:bg-emerald-600 hover:text-white transition-all flex items-center justify-center">
+                            {playingTrackId === track._id ? '⏸' : '▶'}
+                        </button>
+                        {playingTrackId === track._id && track.audioUrl && <audio src={track.audioUrl} autoPlay onEnded={() => setPlayingTrackId(null)} className="hidden" />}
+                    </div>
+                ))}
             </div>
-          )}
+        )}
+
+        {/* DISTRACTION-FREE WRITER UI */}
+        <div className="flex-1 flex flex-col bg-[#050505]/80 backdrop-blur-2xl border border-white/5 rounded-3xl p-8 shadow-2xl relative group">
+            
+            <div className="flex items-center justify-between mb-6 border-b border-white/5 pb-4">
+                <div>
+                    <h2 className="text-2xl font-serif italic text-white opacity-80 group-hover:opacity-100 transition-opacity">Session for {selectedUser.username}</h2>
+                    <p className="text-[9px] uppercase tracking-[0.4em] text-emerald-500 font-black mt-1">Master Document</p>
+                </div>
+                
+                <div className="flex items-center gap-4">
+                    <button onClick={triggerAIGhostwriter} disabled={isAiLoading} className="flex items-center gap-2 px-4 py-2 bg-purple-600/10 border border-purple-500/50 text-purple-400 rounded-full text-[9px] uppercase tracking-widest font-black hover:bg-purple-600 hover:text-white transition-all shadow-[0_0_15px_rgba(147,51,234,0.2)] disabled:opacity-50">
+                        {isAiLoading ? 'Generating...' : '✨ Spark AI'}
+                    </button>
+
+                    <button onClick={pushLyricsToProject} disabled={isSavingLyrics} className={`px-6 py-2 rounded-full text-[10px] uppercase tracking-widest font-black transition-all ${isSavingLyrics ? 'bg-emerald-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.6)]' : 'bg-white text-black hover:bg-emerald-600 hover:text-white shadow-lg hover:shadow-[0_0_20px_rgba(16,185,129,0.4)]'}`}>
+                        {isSavingLyrics ? 'Syncing...' : 'DM Lyrics to Artist'}
+                    </button>
+                </div>
+            </div>
+
+            <textarea 
+                value={draftLyrics}
+                onChange={(e) => setDraftLyrics(e.target.value)}
+                placeholder="Start typing your masterpiece..."
+                className="flex-1 w-full bg-transparent border-none text-neutral-300 font-mono text-lg leading-[2.5] outline-none resize-none custom-scrollbar placeholder:text-neutral-800"
+                spellCheck="false"
+            />
         </div>
-
-        {/* ⚡ Premium Action Button */}
-        <button 
-          onClick={handleSendPitch}
-          disabled={status === 'loading' || status === 'success' || !proposal.trim()}
-          className="w-full py-5 rounded-full font-black uppercase tracking-[0.4em] text-[10px] transition-all duration-500 flex items-center justify-center gap-3 relative overflow-hidden group active:scale-95 disabled:opacity-70 disabled:scale-100 disabled:shadow-none"
-          style={{
-            backgroundColor: status === 'success' ? '#10B981' : (status === 'loading' || !proposal.trim() ? '#F4F5F7' : theme.hex),
-            color: status === 'success' ? 'white' : (status === 'loading' || !proposal.trim() ? '#111111' : 'white'),
-            boxShadow: status === 'success' ? '0 15px 30px rgba(16,185,129,0.3)' : (status === 'loading' || !proposal.trim() ? 'none' : `0 15px 30px ${theme.shadow}`)
-          }}
-        >
-          {status === 'idle' && (
-            <>
-              Transmit Proposal 
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-            </>
-          )}
-          {status === 'loading' && (
-            <>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="animate-spin text-[#111111]/50"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-              <span className="text-[#111111]/50">Encrypting Payload...</span>
-            </>
-          )}
-          {status === 'success' && (
-            <>
-              Deal Proposed 
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="animate-in zoom-in duration-300"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            </>
-          )}
-        </button>
-      </div>
-
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(17,17,17,0.1); border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(17,17,17,0.3); }
-      `}</style>
-    </div>,
-    document.body
+    </div>
   );
 }

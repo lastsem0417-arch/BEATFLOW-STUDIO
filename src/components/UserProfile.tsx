@@ -4,6 +4,9 @@ import axios from 'axios';
 import { useAudio } from '../context/AudioContext';
 import EditProfileModal from './EditProfileModal'; 
 
+// 🔥 VITE ENV API URL FETCH 🔥
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function UserProfile() {
   const { id } = useParams(); 
   const navigate = useNavigate();
@@ -33,15 +36,17 @@ export default function UserProfile() {
     const fetchProfileData = async () => {
       try {
         setLoading(true);
-        const userRes = await axios.get(`import.meta.env.VITE_API_URL/api/users/${targetId}`);
+        // 🚨 FIX: URL Syntax Fixed
+        const userRes = await axios.get(`${BACKEND_URL}/api/users/${targetId}`);
         setProfileUser(userRes.data);
         
         if (userRes.data.followers?.includes(currentUserId)) {
           setIsFollowing(true);
         }
 
-        const postsRes = await axios.get(`import.meta.env.VITE_API_URL/api/feed/user/${targetId}`);
-        setUserPosts(postsRes.data);
+        // 🚨 FIX: URL Syntax Fixed
+        const postsRes = await axios.get(`${BACKEND_URL}/api/feed/user/${targetId}`);
+        setUserPosts(Array.isArray(postsRes.data) ? postsRes.data : []);
       } catch (error) {
         console.error("Error loading profile:", error);
       } finally {
@@ -54,7 +59,8 @@ export default function UserProfile() {
 
   const handleFollowToggle = async () => {
     try {
-      await axios.post(`import.meta.env.VITE_API_URL/api/users/${profileUser._id}/follow`, {}, {
+      // 🚨 FIX: URL Syntax Fixed
+      await axios.post(`${BACKEND_URL}/api/users/${profileUser._id}/follow`, {}, {
         headers: { Authorization: `Bearer ${loggedInUser.token}` }
       });
       setIsFollowing(!isFollowing);
@@ -121,7 +127,8 @@ export default function UserProfile() {
 
     // Server Update
     try {
-      await axios.post(`import.meta.env.VITE_API_URL/api/feed/${post._id}/like`, {}, {
+      // 🚨 FIX: URL Syntax Fixed
+      await axios.post(`${BACKEND_URL}/api/feed/${post._id}/like`, {}, {
         headers: { Authorization: `Bearer ${loggedInUser.token}` }
       });
     } catch (err) { 

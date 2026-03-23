@@ -9,6 +9,7 @@ export default function EnvironmentTester() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [activeEnv, setActiveEnv] = useState<'studio' | 'car' | 'phone' | 'club'>('studio');
   const [fileName, setFileName] = useState<string>("Load a beat to test...");
+  const [tick, setTick] = useState(0); // Trigger visualizer re-renders
 
   // Web Audio API Refs
   const audioElRef = useRef<HTMLAudioElement | null>(null);
@@ -40,15 +41,15 @@ export default function EnvironmentTester() {
       setAudioUrl(url);
       setFileName(file.name);
       setIsPlaying(false);
+      
+      // Stop current playback if uploading new file
       if (audioElRef.current) {
         audioElRef.current.pause();
-        audioElRef.current.src = url;
-        audioElRef.current.load();
       }
     }
   };
 
-  // Initialize Web Audio API
+  // 🔥 Initialize Web Audio API - FIXED SOURCE ROUTING 🔥
   useEffect(() => {
     if (!audioUrl) return;
 
@@ -59,33 +60,41 @@ export default function EnvironmentTester() {
 
     const ctx = audioCtxRef.current;
 
-    // Create Audio Element if not exists
+    // Create Audio Element ONLY ONCE
     if (!audioElRef.current) {
       audioElRef.current = new Audio();
-      audioElRef.current.crossOrigin = "anonymous";
-      audioElRef.current.loop = true; // Loop the beat while testing
+      // 🔥 FIX: Removed crossOrigin="anonymous" for blob URLs to avoid CORS blocking 🔥
+      audioElRef.current.loop = true; 
     }
 
-    // Create Source Node (only once)
-    if (!sourceNodeRef.current && audioElRef.current) {
+    const audioEl = audioElRef.current;
+
+    // 🔥 FIX: ACTUALLY SET THE SRC TO THE ELEMENT 🔥
+    if (audioEl.src !== audioUrl) {
+      audioEl.src = audioUrl;
+      audioEl.load();
+    }
+
+    // Create Routing Path (only once)
+    if (!sourceNodeRef.current) {
       try {
-        sourceNodeRef.current = ctx.createMediaElementSource(audioElRef.current);
-      } catch (e) { console.error("Source node already connected"); }
-    }
+        sourceNodeRef.current = ctx.createMediaElementSource(audioEl);
 
-    // Initialize Filters if not exists
-    if (!highPassRef.current) {
-      highPassRef.current = ctx.createBiquadFilter(); highPassRef.current.type = 'highpass';
-      lowPassRef.current = ctx.createBiquadFilter(); lowPassRef.current.type = 'lowpass';
-      bassRef.current = ctx.createBiquadFilter(); bassRef.current.type = 'lowshelf';
-      trebleRef.current = ctx.createBiquadFilter(); trebleRef.current.type = 'highshelf';
+        // Initialize Filters
+        highPassRef.current = ctx.createBiquadFilter(); highPassRef.current.type = 'highpass';
+        lowPassRef.current = ctx.createBiquadFilter(); lowPassRef.current.type = 'lowpass';
+        bassRef.current = ctx.createBiquadFilter(); bassRef.current.type = 'lowshelf';
+        trebleRef.current = ctx.createBiquadFilter(); trebleRef.current.type = 'highshelf';
 
-      // Chain: Source -> HighPass -> LowPass -> Bass -> Treble -> Destination
-      sourceNodeRef.current?.connect(highPassRef.current);
-      highPassRef.current.connect(lowPassRef.current);
-      lowPassRef.current.connect(bassRef.current);
-      bassRef.current.connect(trebleRef.current);
-      trebleRef.current.connect(ctx.destination);
+        // Chain: Source -> HighPass -> LowPass -> Bass -> Treble -> Destination
+        sourceNodeRef.current.connect(highPassRef.current);
+        highPassRef.current.connect(lowPassRef.current);
+        lowPassRef.current.connect(bassRef.current);
+        bassRef.current.connect(trebleRef.current);
+        trebleRef.current.connect(ctx.destination);
+      } catch (e) { 
+        console.error("Audio Routing setup error:", e); 
+      }
     }
   }, [audioUrl]);
 
@@ -103,7 +112,6 @@ export default function EnvironmentTester() {
     const transitionTime = 0.3; 
 
     if (activeEnv === 'studio') {
-      // FLAT RESPONSE
       hp.frequency.setTargetAtTime(10, now, transitionTime);
       lp.frequency.setTargetAtTime(22000, now, transitionTime);
       bass.frequency.setTargetAtTime(100, now, transitionTime);
@@ -112,7 +120,6 @@ export default function EnvironmentTester() {
       treble.gain.setTargetAtTime(0, now, transitionTime);
     } 
     else if (activeEnv === 'car') {
-      // CAR STEREO (V-Shape: Boosted Bass & Crisp Highs)
       hp.frequency.setTargetAtTime(20, now, transitionTime);
       lp.frequency.setTargetAtTime(18000, now, transitionTime);
       bass.frequency.setTargetAtTime(80, now, transitionTime);
@@ -121,7 +128,6 @@ export default function EnvironmentTester() {
       treble.gain.setTargetAtTime(4, now, transitionTime);
     } 
     else if (activeEnv === 'phone') {
-      // PHONE SPEAKER (No Bass, Tinny Highs)
       hp.frequency.setTargetAtTime(600, now, transitionTime);
       lp.frequency.setTargetAtTime(10000, now, transitionTime);
       bass.frequency.setTargetAtTime(100, now, transitionTime);
@@ -130,7 +136,6 @@ export default function EnvironmentTester() {
       treble.gain.setTargetAtTime(6, now, transitionTime);
     } 
     else if (activeEnv === 'club') {
-      // CLUB SOUND SYSTEM (Massive Sub-bass, slightly muffled highs)
       hp.frequency.setTargetAtTime(30, now, transitionTime);
       lp.frequency.setTargetAtTime(12000, now, transitionTime);
       bass.frequency.setTargetAtTime(60, now, transitionTime);
@@ -139,6 +144,15 @@ export default function EnvironmentTester() {
       treble.gain.setTargetAtTime(-2, now, transitionTime);
     }
   }, [activeEnv]);
+
+  // 🔥 Visualizer Bounce Logic 🔥
+  useEffect(() => {
+    let interval: any;
+    if (isPlaying) {
+      interval = setInterval(() => setTick(prev => prev + 1), 150); // React re-render to make bars bounce
+    }
+    return () => clearInterval(interval);
+  }, [isPlaying]);
 
   const togglePlay = () => {
     if (!audioElRef.current || !audioUrl) return;
@@ -150,7 +164,7 @@ export default function EnvironmentTester() {
     if (isPlaying) {
       audioElRef.current.pause();
     } else {
-      audioElRef.current.play();
+      audioElRef.current.play().catch(e => console.error("Playback prevented:", e));
     }
     setIsPlaying(!isPlaying);
   };
@@ -190,10 +204,10 @@ export default function EnvironmentTester() {
          </p>
          
          <div className="flex items-center gap-1 h-16 w-full justify-center">
-            {/* CSS Visualizer */}
+            {/* CSS Visualizer (Now it actually bounces when playing!) */}
             {[...Array(30)].map((_, i) => (
                <div 
-                 key={i} 
+                 key={`${i}-${tick}`} // Force re-render to trigger new Math.random()
                  className="w-1.5 md:w-2 bg-[#D4AF37] rounded-full transition-all duration-150"
                  style={{ 
                    height: isPlaying ? `${Math.random() * 80 + 20}%` : '4px',

@@ -3,7 +3,8 @@ import axios from 'axios';
 import { io, Socket } from 'socket.io-client';
 import gsap from 'gsap';
 
-let socket: Socket;
+// 🔥 VITE ENV API URL FETCH 🔥
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export default function RapperNetwork({ setIsDawOpen }: { setIsDawOpen?: any }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -20,15 +21,19 @@ export default function RapperNetwork({ setIsDawOpen }: { setIsDawOpen?: any }) 
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [replyText, setReplyText] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
+  
+  // Ref to hold socket instance
+  const socketRef = useRef<Socket | null>(null);
 
   const selectedUserRef = useRef(selectedUser);
   useEffect(() => { selectedUserRef.current = selectedUser; }, [selectedUser]);
 
+  // 1. Fetch Users
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const token = currentUser.token;
-        const res = await axios.get('import.meta.env.VITE_API_URL/api/users/all', {
+        const res = await axios.get(`${BACKEND_URL}/api/users/all`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setAllUsers(res.data);
@@ -37,30 +42,44 @@ export default function RapperNetwork({ setIsDawOpen }: { setIsDawOpen?: any }) 
     fetchUsers();
   }, [currentUser.token]);
 
+  // 2. Initialize Socket Connection SAFELY
   useEffect(() => {
     if (!safeUserId) return;
-    socket = io('import.meta.env.VITE_API_URL');
-    socket.emit('join_room', safeUserId);
     
-    socket.on('receive_message', (data) => {
-      if (String(data.senderId) === String(selectedUserRef.current?._id) || String(data.receiverId) === String(selectedUserRef.current?._id)) {
+    socketRef.current = io(BACKEND_URL);
+    socketRef.current.emit('join_room', safeUserId);
+    
+    socketRef.current.on('receive_message', (data) => {
+      // 🚨 FIX: Check both senderId and _id to avoid undefined matching
+      const sId = String(data.senderId || data.sender);
+      const rId = String(data.receiverId || data.receiver);
+      const currSelectedId = String(selectedUserRef.current?._id);
+
+      if (sId === currSelectedId || rId === currSelectedId) {
         setChatMessages((prev) => [...prev, data]);
       }
     });
-    return () => { socket.disconnect(); };
+
+    return () => { 
+      if (socketRef.current) socketRef.current.disconnect(); 
+    };
   }, [safeUserId]);
 
+  // 3. Load Selected User Context & Old Chats
   useEffect(() => {
     const loadUserContext = async () => {
       if (!selectedUser) return;
       try {
         const token = currentUser.token;
-        const chatRes = await axios.get(`import.meta.env.VITE_API_URL/api/chat/direct/${selectedUser._id}`, {
+        
+        // 🚨 FIX: FALLBACK FOR OLD CHATS 
+        const chatRes = await axios.get(`${BACKEND_URL}/api/chat/direct/${selectedUser._id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setChatMessages(chatRes.data);
+        // Sometime backend returns { messages: [...] } or just an array
+        setChatMessages(chatRes.data.messages || chatRes.data || []);
 
-        const trackRes = await axios.get(`import.meta.env.VITE_API_URL/api/tracks/user/${selectedUser._id}`, {
+        const trackRes = await axios.get(`${BACKEND_URL}/api/tracks/user/${selectedUser._id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUserPortfolio(trackRes.data);
@@ -92,21 +111,24 @@ export default function RapperNetwork({ setIsDawOpen }: { setIsDawOpen?: any }) 
     setReplyText(""); 
 
     setChatMessages(prev => [...prev, { ...messagePayload, id: Date.now().toString() }]);
-    socket.emit('send_message', messagePayload);
+    if (socketRef.current) {
+       socketRef.current.emit('send_message', messagePayload);
+    }
     
     try {
-      await axios.post('import.meta.env.VITE_API_URL/api/chat/send', messagePayload, {
+      await axios.post(`${BACKEND_URL}/api/chat/send`, messagePayload, {
          headers: { Authorization: `Bearer ${currentUser.token}` } 
       });
-    } catch (err) { setReplyText(currentReply); }
+    } catch (err) { setReplyText(currentReply); } // Revert if fails
   };
 
+  // 🚨 FIX: Filter out the logged-in user so they don't chat with themselves
   const filteredUsers = allUsers.filter(u => 
-    u.username?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    u.role?.toLowerCase().includes(searchTerm.toLowerCase())
+    String(u._id) !== String(safeUserId) &&
+    (u.username?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    u.role?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  // Hardcoded Hex for roles to ensure Tailwind compliance (Adjusted for Light Theme)
   const getRoleColor = (role: string) => {
     const r = role?.toLowerCase();
     if (r === 'rapper') return 'text-[#E63946]';
@@ -114,7 +136,6 @@ export default function RapperNetwork({ setIsDawOpen }: { setIsDawOpen?: any }) 
     return 'text-[#D4AF37]';
   };
 
-  // 🔥 GSAP ENTRANCE ANIMATION 🔥
   useLayoutEffect(() => {
     let ctx = gsap.context(() => {
       gsap.fromTo(containerRef.current, 
@@ -122,16 +143,14 @@ export default function RapperNetwork({ setIsDawOpen }: { setIsDawOpen?: any }) 
         { opacity: 1, y: 0, duration: 1, ease: 'expo.out' }
       );
     }, containerRef);
-    return () => ctx.revert();
+    return () => ctx.revert();  
   }, []);
-
+  
   return (
-    // 🔥 PREMIUM LIGHT BASE (#F4F3EF) WITH EDITORIAL BORDERS 🔥
     <div ref={containerRef} className="h-[75vh] min-h-[600px] w-full bg-white border border-[#111]/10 rounded-[1rem] flex overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.05)] relative select-none mt-2">
       
       {/* 🌟 LEFT PANE: THE GLOBAL DIRECTORY */}
       <div className="w-80 shrink-0 border-r border-[#111]/10 bg-[#F4F3EF] flex flex-col z-10 relative">
-        {/* Subtle top noise pattern */}
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-[0.03] pointer-events-none mix-blend-multiply"></div>
         
         <div className="p-8 border-b border-[#111]/10 bg-white relative z-10">
@@ -183,7 +202,7 @@ export default function RapperNetwork({ setIsDawOpen }: { setIsDawOpen?: any }) 
         {selectedUser ? (
           <div className="flex-1 flex overflow-hidden relative z-10 h-full">
                 
-                {/* 🗂️ MIDDLE: ARTIST DOSSIER (Portfolio - Editorial Layout) */}
+                {/* 🗂️ MIDDLE: ARTIST DOSSIER */}
                 <div className="w-80 shrink-0 border-r border-[#111]/10 bg-[#F4F3EF] p-8 flex flex-col h-full">
                     <div className="text-center mb-8 border-b border-[#111]/10 pb-8 relative group">
                         <div className="absolute inset-0 bg-[#E63946]/5 blur-[30px] rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
@@ -228,7 +247,7 @@ export default function RapperNetwork({ setIsDawOpen }: { setIsDawOpen?: any }) 
                     </div>
                 </div>
 
-                {/* 💬 THE SECURE DIRECT LINE (Clean Chat) */}
+                {/* 💬 THE SECURE DIRECT LINE */}
                 <div className="flex-1 flex flex-col relative bg-white h-full">
                     <div className="h-20 border-b border-[#111]/10 bg-white/80 flex justify-between items-center px-8 z-20 backdrop-blur-xl shrink-0">
                         <div className="flex items-center gap-4">
@@ -255,7 +274,10 @@ export default function RapperNetwork({ setIsDawOpen }: { setIsDawOpen?: any }) 
                           </div>
                         ) : (
                           chatMessages.map((msg: any, i: number) => {
-                            const isMe = String(msg.senderId) === String(safeUserId);
+                            // 🚨 FIX: ROBUST ID CHECKING FOR RENDERING PROPERLY
+                            const senderId = String(msg.senderId || msg.sender?._id || msg.sender);
+                            const isMe = senderId === String(safeUserId);
+                            
                             return (
                               <div key={i} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`max-w-[75%] p-4 flex flex-col gap-2 transition-all shadow-sm ${isMe ? 'bg-[#E63946] text-white rounded-[1rem] rounded-tr-sm' : 'bg-white border border-[#111]/10 text-[#111] rounded-[1rem] rounded-tl-sm'}`}>
@@ -292,7 +314,6 @@ export default function RapperNetwork({ setIsDawOpen }: { setIsDawOpen?: any }) 
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center h-full bg-[#FAF9F6] p-12 text-center relative overflow-hidden">
-             {/* Subtle background element */}
              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/grid-me.png')] opacity-5 mix-blend-multiply"></div>
              
              <div className="w-24 h-24 rounded-full border border-[#111]/10 flex items-center justify-center mb-8 relative z-10 bg-white shadow-sm">
@@ -305,7 +326,6 @@ export default function RapperNetwork({ setIsDawOpen }: { setIsDawOpen?: any }) 
         )}
       </div>
 
-      {/* 🔥 THE CSS FOR THE SCROLLBAR INJECTION 🔥 */}
       <style>{`
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px !important;

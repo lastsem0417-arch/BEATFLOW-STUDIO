@@ -31,8 +31,10 @@ export default function GlobalFeed() {
   useEffect(() => {
     const fetchFeed = async () => {
       try {
-        const res = await axios.get('import.meta.env.VITE_API_URL/api/feed');
-        setPosts(res.data.reverse()); 
+        // 🚨 FIX: URL syntax and Array safety
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/feed`);
+        const feedData = Array.isArray(res.data) ? res.data : (res.data.posts || []);
+        setPosts(feedData.reverse()); 
       } catch (error) {
         console.error("Feed error:", error);
       } finally {
@@ -113,7 +115,8 @@ export default function GlobalFeed() {
     }));
 
     try {
-      await axios.post(`import.meta.env.VITE_API_URL/api/feed/${post._id}/like`, {}, {
+      // 🚨 FIX: URL syntax
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/feed/${post._id}/like`, {}, {
         headers: { Authorization: `Bearer ${loggedInUser.token}` }
       });
     } catch (err) { console.error(err); }
@@ -131,7 +134,8 @@ export default function GlobalFeed() {
     if (!window.confirm("System Warning: Permanently delete this asset?")) return;
 
     try {
-      await axios.delete(`import.meta.env.VITE_API_URL/api/admin/posts/${postId}`, {
+      // 🚨 FIX: URL syntax
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/admin/posts/${postId}`, {
         headers: { Authorization: `Bearer ${loggedInUser.token}` }
       });
       setPosts(posts.filter(p => p._id !== postId));
@@ -155,17 +159,14 @@ export default function GlobalFeed() {
   const activeColor = currentTrack ? getRoleColor(currentTrack.creatorRole) : '#D4AF37';
 
   return (
-    // 🔥 UNIVERSAL PREMIUM CONTAINER 🔥
     <div ref={feedRef} className="w-full flex flex-col items-center py-6 relative font-sans text-[#111111] bg-[#F4F5F7] min-h-screen">
       
-      {/* 🌈 Ambient Prismatic Mesh Background (Blend with dashboards) */}
       <div className="fixed inset-0 pointer-events-none z-0 opacity-40 mix-blend-multiply overflow-hidden">
          <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-[#D4AF37]/10 blur-[120px] rounded-full animate-pulse" style={{ animationDuration: '8s' }}></div>
          <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-[#2563EB]/10 blur-[150px] rounded-full animate-pulse" style={{ animationDuration: '12s' }}></div>
          <div className="absolute top-[30%] right-[10%] w-[30vw] h-[30vw] bg-[#E63946]/5 blur-[100px] rounded-full"></div>
       </div>
       
-      {/* Dynamic Active Track Aura */}
       {isPlaying && (
         <div 
           className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vw] blur-[200px] rounded-full pointer-events-none z-0 transition-colors duration-1000 ease-in-out opacity-10" 
@@ -175,10 +176,8 @@ export default function GlobalFeed() {
 
       <div className="w-full max-w-[900px] px-4 md:px-8 z-10 flex flex-col gap-16 pb-40">
         
-        {/* 🎩 MASSIVE COLORFUL EDITORIAL HEADER */}
         <div className="feed-header w-full pt-16 pb-12 flex flex-col items-center justify-center text-center relative z-10">
           
-          {/* Status Pill */}
           <div className="flex items-center gap-3 mb-6 px-5 py-2.5 rounded-full bg-white/60 backdrop-blur-md border border-white shadow-[0_10px_20px_rgba(0,0,0,0.03)]">
              <span className="relative flex h-2 w-2">
                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: activeColor }}></span>
@@ -190,7 +189,6 @@ export default function GlobalFeed() {
           </div>
 
           <div className="relative flex flex-col items-center w-full leading-[0.8] select-none perspective-[1000px]">
-             {/* Vibrant Gradient Text */}
              <h1 className="text-[12vw] md:text-[9vw] font-black uppercase tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-[#D4AF37] via-[#E63946] to-[#2563EB] drop-shadow-[0_20px_40px_rgba(212,175,55,0.2)]">
                GLOBAL
              </h1>
@@ -199,7 +197,6 @@ export default function GlobalFeed() {
              </h1>
           </div>
 
-          {/* Core Pillars */}
           <div className="mt-14 flex items-center gap-6 md:gap-12 text-[10px] font-black uppercase tracking-[0.5em] text-[#111111]/40 bg-white/40 backdrop-blur-md px-10 py-4 rounded-full border border-white">
              <span className="hover:text-[#D4AF37] transition-colors duration-300 cursor-default">BEATS</span>
              <span className="opacity-20">•</span>
@@ -210,7 +207,6 @@ export default function GlobalFeed() {
 
         </div>
 
-        {/* ⏳ LOADING STATE */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-40 opacity-50 relative z-10">
              <div className="w-16 h-16 border-[3px] border-[#111111]/10 border-t-[#D4AF37] rounded-full animate-spin mb-6"></div>
@@ -233,22 +229,16 @@ export default function GlobalFeed() {
 
             return (
               <div key={post._id} className="feed-card-wrapper relative z-10">
-                {/* Subtle Glow Behind Active Card */}
                 {isThisPlaying && (
                   <div className="absolute inset-0 blur-[40px] rounded-[3rem] opacity-20 -z-10 transition-colors duration-500" style={{ backgroundColor: roleColor }}></div>
                 )}
 
                 <div 
-                  // 🔥 WHITE CARD WITH DYNAMIC ACCENTS 🔥
                   className={`feed-card-item shrink-0 group bg-white border transition-all duration-500 rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.03)] relative overflow-hidden ${isThisPlaying ? 'hover:shadow-[0_30px_60px_rgba(0,0,0,0.08)] scale-[1.01]' : 'hover:shadow-[0_30px_60px_rgba(0,0,0,0.06)] hover:-translate-y-2'}`}
-                  style={{ 
-                    borderColor: isThisPlaying ? roleColor : 'rgba(255,255,255,0.5)',
-                  }}
+                  style={{ borderColor: isThisPlaying ? roleColor : 'rgba(255,255,255,0.5)' }}
                 >
-                  {/* Subtle Gradient Top Border Line based on Role */}
                   <div className="absolute top-0 left-0 w-full h-1 opacity-50 group-hover:opacity-100 transition-opacity duration-500" style={{ backgroundColor: roleColor }}></div>
                   
-                  {/* 👤 CREATOR HEADER */}
                   <div className="p-8 md:p-10 flex items-start justify-between relative z-10 bg-gradient-to-b from-[#F4F5F7]/30 to-transparent">
                     <div className="flex items-center gap-5">
                       <div 
@@ -278,7 +268,6 @@ export default function GlobalFeed() {
                     </div>
                   </div>
 
-                  {/* 📝 CONTENT BODY */}
                   <div className="px-8 md:px-10 pb-8 relative z-10">
                       <h4 
                         className="text-3xl md:text-4xl font-serif italic text-[#111111] mb-5 leading-tight transition-colors duration-500"
@@ -288,7 +277,6 @@ export default function GlobalFeed() {
                       </h4>
                       {post.description && <p className="text-[#111111]/60 text-[15px] font-medium mb-10 leading-relaxed max-w-2xl">{post.description}</p>}
 
-                      {/* 🎵 THE COLORFUL AUDIO PLAYER */}
                       {isAudioPost && (
                         <div 
                           className="p-5 md:p-6 rounded-[2rem] border flex flex-col md:flex-row items-center gap-6 transition-all duration-500"
@@ -298,12 +286,9 @@ export default function GlobalFeed() {
                             boxShadow: isThisPlaying ? `inset 0 0 40px ${roleColor}05` : 'inset 0 2px 10px rgba(0,0,0,0.02)'
                           }}
                         >
-                            
-                            {/* Play Button & Cover Art */}
                             <div className="relative w-28 h-28 shrink-0 rounded-[1.5rem] overflow-hidden bg-white group/playbtn cursor-pointer shadow-md border border-white" onClick={(e) => handlePlayClick(e, post)}>
                                 <img src={post.coverImage || avatarSrc} className={`w-full h-full object-cover transition-all duration-700 ${isThisPlaying ? 'opacity-60 scale-110 blur-[2px]' : 'opacity-90 group-hover/playbtn:opacity-100 group-hover/playbtn:scale-105'}`} alt="Cover" />
                                 
-                                {/* Dynamic Play Button Overlay */}
                                 <div className="absolute inset-0 flex items-center justify-center transition-colors duration-500" style={{ backgroundColor: isThisPlaying ? `${roleColor}20` : 'rgba(17,17,17,0.2)' }}>
                                   {isThisPlaying && isPlaying ? (
                                     <div className="w-14 h-14 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg transform scale-110">
@@ -317,7 +302,6 @@ export default function GlobalFeed() {
                                 </div>
                             </div>
                             
-                            {/* Scrubber Console */}
                             <div className="flex-1 w-full">
                               <div className="flex items-end justify-between mb-5">
                                   <p className="text-[10px] uppercase tracking-[0.3em] font-black text-[#111111]/50 flex items-center gap-2">
@@ -335,7 +319,6 @@ export default function GlobalFeed() {
                                   </span>
                               </div>
                               
-                              {/* Dynamic Range Slider */}
                               {isThisPlaying ? (
                                 <div className="relative w-full h-3 bg-white rounded-full overflow-hidden shadow-inner border border-black/5">
                                   <div className="absolute top-0 left-0 h-full transition-all duration-100 ease-linear shadow-[0_0_10px_rgba(255,255,255,0.5)]" style={{ width: `${progress}%`, backgroundColor: roleColor }}></div>
@@ -353,7 +336,6 @@ export default function GlobalFeed() {
                         </div>
                       )}
 
-                      {/* ✍️ EDITORIAL LYRICS SECTION */}
                       {post.lyricsText && (
                         <div className="mt-10 relative pt-8 border-t border-[#111111]/5">
                             <span 
@@ -387,11 +369,9 @@ export default function GlobalFeed() {
                       )}
                   </div>
 
-                  {/* ⚡ VIBRANT INTERACTION FOOTER */}
                   <div className="px-8 md:px-10 py-6 flex items-center justify-between border-t border-[#111111]/5 relative z-10 bg-[#F9F9FB]">
                       <div className="flex gap-8">
                         
-                        {/* Dynamic Like Button */}
                         <button onClick={(e) => handleLike(post, e)} className="flex items-center gap-2 group/btn transition-transform active:scale-95">
                           <svg width="22" height="22" viewBox="0 0 24 24" fill={iLikedThis ? roleColor : 'none'} stroke={iLikedThis ? roleColor : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#111111]/30 transition-colors" style={{ color: iLikedThis ? roleColor : undefined }}>
                             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
@@ -399,7 +379,6 @@ export default function GlobalFeed() {
                           <span className="text-xs font-mono font-black" style={{ color: iLikedThis ? roleColor : 'rgba(17,17,17,0.4)' }}>{post.likes?.length || 0}</span>
                         </button>
                         
-                        {/* Comment Button */}
                         <button onClick={() => setCommentingPost(post)} className="flex items-center gap-2 group/btn transition-transform active:scale-95">
                           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#111111]/30 group-hover/btn:text-[#111111]/70 transition-colors"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                           <span className="text-xs font-mono font-black text-[#111111]/40 group-hover/btn:text-[#111111]/70 transition-colors">{post.comments?.length || 0}</span>
@@ -408,7 +387,6 @@ export default function GlobalFeed() {
                       </div>
 
                       <div className="flex items-center gap-4">
-                        {/* DYNAMIC PITCH BUTTON */}
                         {!isListener && !isAdmin && (
                           <button 
                             onClick={() => setPitchingPost(post)}
@@ -420,7 +398,6 @@ export default function GlobalFeed() {
                           </button>
                         )}
 
-                        {/* ADMIN DELETE */}
                         {isAdmin && (
                           <button 
                             onClick={(e) => handleDeletePost(post._id, e)}

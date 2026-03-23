@@ -76,7 +76,8 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
     const fetchRoomData = async () => {
       try {
         const config = { headers: { Authorization: `Bearer ${user.token}` } };
-        const res = await axios.get(`import.meta.env.VITE_API_URL/api/collab/rooms/${roomId}`, config);
+        // FIXED: Replaced string literal with proper template literal variable evaluation
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/collab/rooms/${roomId}`, config);
         const roomData = res.data.room || res.data.data || res.data; 
         if (roomData && roomData.chatHistory && roomData.chatHistory.length > 0) {
           setMessages([{ sender: 'System', text: `Restored session history.`, time: '', isSystem: true }, ...roomData.chatHistory]);
@@ -90,7 +91,6 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
     fetchRoomData();
   }, [roomId, user.token]);
 
-  // 🔥 INFINITE LOOP FIXED HERE: Removed 'user' from dependency array!
   useEffect(() => {
     let isMounted = true;
     let streamRef: MediaStream | null = null;
@@ -102,7 +102,8 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
       streamRef = stream;
       setLocalStream(stream);
 
-      socketRef.current = io("import.meta.env.VITE_API_URL");
+      // FIXED: Passed as actual string value, not literal
+      socketRef.current = io(import.meta.env.VITE_API_URL as string);
       socketRef.current.emit("join-room", { roomId, userDetails: user });
 
       socketRef.current.on("user-connected", (payload) => {
@@ -162,7 +163,8 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
     }).catch(err => {
       console.error("Camera error:", err);
       if (isMounted) {
-         socketRef.current = io("import.meta.env.VITE_API_URL");
+         // FIXED
+         socketRef.current = io(import.meta.env.VITE_API_URL as string);
          socketRef.current.emit("join-room", { roomId, userDetails: user });
       }
     });
@@ -176,7 +178,7 @@ export default function CollabStudio({ roomId, role, onLeave }: CollabStudioProp
         audioInstanceRef.current = null;
       }
     };
-  }, [roomId]); // <-- This array is now safe
+  }, [roomId]); 
 
   useEffect(() => {
     if (isCamOn && localVideoRef.current && localStream) { localVideoRef.current.srcObject = localStream; }

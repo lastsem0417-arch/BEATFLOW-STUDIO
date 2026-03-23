@@ -38,7 +38,7 @@ export default function EditProfileModal({ user, onClose, onSuccess }: any) {
 
     try {
       const loggedInUser = JSON.parse(sessionStorage.getItem('beatflow_user') || '{}');
-      const res = await axios.put('import.meta.env.VITE_API_URL/api/users/update-profile', formData, {
+      const res = await axios.put('{import.meta.env.VITE_API_URL/api/users/update-profile', formData, {
         headers: { 
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${loggedInUser.token}` 

@@ -36,11 +36,12 @@ exports.registerUser = async (req, res) => {
       role: role.toLowerCase() 
     });
 
+    // registerUser ke andar ka response aise change kar do:
     res.status(201).json({
       _id: user._id,
       username: user.username,
-      role: user.role,
-      token: generateToken(user._id, user.role),
+      role: role.toLowerCase(), // 🚨 FIX: req.body wala role forcefully bhej rahe hain
+      token: generateToken(user._id, role.toLowerCase()),
     });
   } catch (error) {
     // 🔥 Duplicate entry handler (Pehle jaisa)

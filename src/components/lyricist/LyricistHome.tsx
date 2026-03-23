@@ -16,11 +16,12 @@ export default function LyricistHome() {
       try {
         const token = currentUser.token;
         
-        // 1. Fetch Vault Stats
-        const vaultRes = await axios.get('import.meta.env.VITE_API_URL/api/projects/my-vault', {
+        // 1. Fetch Vault Stats (FIX: URL and Array validation)
+        const vaultRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/projects/my-vault`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        const projects = vaultRes.data;
+        const projects = Array.isArray(vaultRes.data) ? vaultRes.data : (vaultRes.data.projects || []);
+        
         const sortedVault = [...projects].sort((a: any, b: any) => new Date(b.updatedAt || b.createdAt).getTime() - new Date(a.updatedAt || a.createdAt).getTime());
         setRecentProjects(sortedVault.slice(0, 3));
         
@@ -30,10 +31,11 @@ export default function LyricistHome() {
         });
         setStats({ totalProjects: projects.length, totalWords: wordCount });
 
-        // 2. 🔥 FETCH REAL FEED DATA FOR COLLABS 🔥
-        const feedRes = await axios.get('import.meta.env.VITE_API_URL/api/feed');
-        // Filter out lyrics, only keep Beats/Audio where Lyricist can pitch
-        const beatsOnly = feedRes.data.filter((post: any) => post.contentUrl).reverse().slice(0, 4);
+        // 2. 🔥 FETCH REAL FEED DATA FOR COLLABS (FIX: URL and Array validation)
+        const feedRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/feed`);
+        const feedData = Array.isArray(feedRes.data) ? feedRes.data : (feedRes.data.posts || []);
+        
+        const beatsOnly = feedData.filter((post: any) => post.contentUrl).reverse().slice(0, 4);
         setRealCollabs(beatsOnly);
 
         setIsLoading(false);
@@ -54,12 +56,10 @@ export default function LyricistHome() {
   );
 
   return (
-    // 🔥 PREMIUM LIGHT BASE (Transparent so it uses LyricistMaster's Ivory base)
+    // 🔥 PREMIUM LIGHT BASE
     <div className="flex-1 bg-transparent flex flex-col relative z-10 h-full overflow-y-auto custom-scrollbar text-[#0A1A14]" data-lenis-prevent="true">
         
-        {/* 🌟 TOP EDITORIAL BANNER */}
         <div className="bg-white border border-[#0A1A14]/5 rounded-[2.5rem] p-10 md:p-16 mb-12 flex flex-col md:flex-row justify-between items-start md:items-center relative overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.03)] group hover:shadow-[0_20px_60px_rgba(16,185,129,0.05)] transition-all duration-700">
-            {/* Elegant Soft Green Glow */}
             <div className="absolute top-[-20%] right-[-10%] w-96 h-96 bg-[#10B981]/10 blur-[100px] rounded-full pointer-events-none transition-opacity duration-700 group-hover:opacity-100 opacity-60"></div>
             
             <div className="z-10 relative">
@@ -68,7 +68,7 @@ export default function LyricistHome() {
                   Writer's Canvas
                 </p>
                 <h1 className="text-4xl md:text-6xl font-serif italic text-[#0A1A14] tracking-tight leading-none mb-6">
-                    Welcome, <br className="md:hidden"/> {currentUser.username || 'Ghostwriter'}.
+                   Welcome, <br className="md:hidden"/> {currentUser.username || 'Ghostwriter'}.
                 </h1>
                 <p className="text-[#0A1A14]/60 font-serif text-base md:text-lg max-w-lg leading-relaxed border-l-[3px] border-[#10B981] pl-5 italic">
                   The industry awaits your next masterpiece. Enter the zone and forge the narrative.
@@ -83,7 +83,6 @@ export default function LyricistHome() {
             </button>
         </div>
 
-        {/* 📊 STATS ROW (Clean & Minimal) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-16">
             <div className="bg-white border border-[#0A1A14]/5 rounded-[1.5rem] p-8 lg:p-10 flex flex-col justify-center relative overflow-hidden group hover:border-[#10B981]/30 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_15px_40px_rgba(0,0,0,0.03)]">
                 <span className="text-5xl lg:text-6xl font-black text-[#0A1A14] mb-3 tracking-tighter leading-none group-hover:text-[#10B981] transition-colors">{stats.totalProjects}</span>
@@ -102,10 +101,7 @@ export default function LyricistHome() {
             </div>
         </div>
 
-        {/* 🗂️ BOTTOM SPLIT (Grid) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 pb-20">
-            
-            {/* Left: Recent Drafts */}
             <div className="flex flex-col">
                 <div className="flex items-center justify-between mb-8 border-b border-[#0A1A14]/10 pb-4">
                     <h3 className="text-[12px] uppercase tracking-[0.4em] font-black text-[#0A1A14]">Recent Drafts</h3>
@@ -137,7 +133,6 @@ export default function LyricistHome() {
                 </div>
             </div>
 
-            {/* Right: REAL Global Collab Feed */}
             <div className="flex flex-col">
                 <div className="flex items-center justify-between mb-8 border-b border-[#0A1A14]/10 pb-4">
                     <h3 className="text-[12px] uppercase tracking-[0.4em] font-black text-[#0A1A14]">Global Pitch Board</h3>
@@ -179,7 +174,6 @@ export default function LyricistHome() {
                     )}
                 </div>
             </div>
-
         </div>
     </div>
   );

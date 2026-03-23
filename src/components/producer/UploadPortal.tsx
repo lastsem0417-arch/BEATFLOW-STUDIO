@@ -1,6 +1,9 @@
 import React, { useState, useRef } from 'react';
 import axios from 'axios';
 
+// 🔥 VITE ENV API URL FETCH 🔥
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function UploadPortal({ onUploadSuccess }: { onUploadSuccess: () => void }) {
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -28,7 +31,7 @@ export default function UploadPortal({ onUploadSuccess }: { onUploadSuccess: () 
     formData.append('trackType', 'beat');
 
     try {
-      await axios.post('import.meta.env.VITE_API_URL/api/tracks/upload', formData, {
+      await axios.post(`${BACKEND_URL}/api/tracks/upload`, formData, {
         onUploadProgress: (progressEvent) => {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total!);
           setProgress(percentCompleted);

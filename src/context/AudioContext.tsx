@@ -1,13 +1,15 @@
 import React, { createContext, useState, useContext, useRef, useEffect } from 'react';
 
-// 🔥 1. INTERFACE MEIN 'seek' ADD KIYA
+// 🔥 VITE ENV API URL FETCH 🔥
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 interface AudioContextType {
   currentTrack: any;
   isPlaying: boolean;
   progress: number;
   playTrack: (track: any) => void;
   togglePlayPause: () => void;
-  seek: (percent: number) => void; // Naya function
+  seek: (percent: number) => void;
   audioRef: React.RefObject<HTMLAudioElement>;
 }
 
@@ -25,30 +27,84 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
     if (!audio) return;
 
     const updateProgress = () => {
-      if (audio.duration) { // Safe check taaki NaN error na aaye
+      if (audio.duration) { 
         setProgress((audio.currentTime / audio.duration) * 100);
       }
     };
 
     const handleEnded = () => setIsPlaying(false);
+    
+    // 🚨 ROBUST ERROR HANDLING 🚨
+    const handleError = (e: any) => {
+      console.error("🚨 CRITICAL AUDIO ERROR 🚨");
+      console.error("The browser failed to load this URL:", audio.src);
+      console.error("Check if your backend is running and has: app.use('/uploads', express.static('uploads'))");
+      setIsPlaying(false);
+    };
 
     audio.addEventListener('timeupdate', updateProgress);
-    audio.addEventListener('ended', handleEnded); // Gaana khatam
+    audio.addEventListener('ended', handleEnded); 
+    audio.addEventListener('error', handleError);
     
     return () => {
       audio.removeEventListener('timeupdate', updateProgress);
       audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
     };
   }, [currentTrack]);
 
   const playTrack = (track: any) => {
-    setCurrentTrack(track);
+    // 🔥 1. FIND THE EXACT URL FROM BACKEND DEEP SEARCH 🔥
+    let rawUrl = track.contentUrl || track.audioUrl || track.file || track.audio;
+
+    if (!rawUrl || typeof rawUrl !== 'string' || rawUrl.trim() === '') {
+        alert("System Alert: No valid audio asset found in this post. It might be text-only.");
+        return; 
+    }
+
+    let safeUrl = rawUrl;
+
+    // 🔥 2. WINDOWS BACKSLASH FIX 🔥
+    safeUrl = safeUrl.replace(/\\/g, '/');
+
+    // 🔥 3. ATTACH LOCALHOST BACKEND URL SAFELY 🔥
+    if (!safeUrl.startsWith('http')) {
+        const baseUrl = BACKEND_URL.endsWith('/') ? BACKEND_URL.slice(0, -1) : BACKEND_URL;
+        const path = safeUrl.startsWith('/') ? safeUrl : `/${safeUrl}`;
+        safeUrl = `${baseUrl}${path}`;
+    }
+
+    // 🔥 4. CLOUDINARY FORMAT FIX 🔥
+    if (safeUrl.includes('cloudinary.com')) {
+       if (/\.(mkv|webm|avi|mov|flv|ogg)$/i.test(safeUrl)) {
+           safeUrl = safeUrl.replace(/\.(mkv|webm|avi|mov|flv|ogg)$/i, '.mp4');
+       } else if (!/\.(mp4|mp3|wav|m4a|aac)$/i.test(safeUrl)) {
+           safeUrl += '.mp4';
+       }
+    }
+
+    // 🕵️ DEBUG LOG: Check this in your browser console!
+    console.log("🔊 ATTEMPTING TO PLAY URL:", safeUrl);
+
+    const safeTrack = { ...track, contentUrl: safeUrl };
+
+    // Toggle if same track clicked
+    if (currentTrack?._id === safeTrack._id) {
+      togglePlayPause();
+      return;
+    }
+
+    setCurrentTrack(safeTrack);
     setIsPlaying(true);
+    
     setTimeout(() => {
       if (audioRef.current) {
-        audioRef.current.play().catch(err => console.error("Playback error:", err));
+        audioRef.current.play().catch(err => {
+            console.error("Playback Blocked:", err);
+            setIsPlaying(false);
+        });
       }
-    }, 50); // Thoda delay taaki audio source load ho jaye
+    }, 50); 
   };
 
   const togglePlayPause = () => {
@@ -62,7 +118,6 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // 🔥 2. NAYA FUNCTION: Gaane ko scrub (aage-peeche) karne ke liye
   const seek = (percent: number) => {
     if (audioRef.current && audioRef.current.duration) {
       const seekTime = (percent / 100) * audioRef.current.duration;
@@ -72,9 +127,8 @@ export const AudioProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    // 🔥 3. PROVIDER MEIN 'seek' EXPORT KIYA
     <AudioContext.Provider value={{ currentTrack, isPlaying, progress, playTrack, togglePlayPause, seek, audioRef }}>
-      {/* Hidden Audio Element - Yehi asaliyat me bajega */}
+      {/* Hidden Audio Element */}
       <audio ref={audioRef} src={currentTrack?.contentUrl} className="hidden" />
       {children}
     </AudioContext.Provider>

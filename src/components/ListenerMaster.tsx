@@ -11,8 +11,10 @@ import NotificationBell from './feed/NotificationBell';
 import GodModePlayer from './listener/GodModePlayer'; 
 
 // 🔥 GLOBAL AUDIO CONTEXT IMPORTED 🔥
-// (Adjust path if your context is located elsewhere, e.g., '../../context/AudioContext')
 import { useAudio } from '../context/AudioContext'; 
+
+// 🔥 VITE ENV API URL FETCH 🔥
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export default function ListenerMaster() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -33,16 +35,17 @@ export default function ListenerMaster() {
     const fetchHubData = async () => {
       try {
         const token = currentUser.token;
-        // Fetch Architects
-        const userRes = await axios.get('import.meta.env.VITE_API_URL/api/users/all', { headers: { Authorization: `Bearer ${token}` } });
-        const creators = userRes.data.filter((u: any) => u.role !== 'listener');
+        
+        const userRes = await axios.get(`${BACKEND_URL}/api/users/all`, { headers: { Authorization: `Bearer ${token}` } });
+        const usersData = Array.isArray(userRes.data) ? userRes.data : [];
+        const creators = usersData.filter((u: any) => u.role !== 'listener');
         setTopArchitects(creators.slice(0, 10));
 
-        // Fetch Real Audio Posts from Feed
-        const feedRes = await axios.get('import.meta.env.VITE_API_URL/api/feed', { headers: { Authorization: `Bearer ${token}` } });
-        // Filter only posts that have audio
-        const audioPosts = feedRes.data.filter((p: any) => p.contentUrl || p.audioUrl);
-        setFeedTracks(audioPosts.reverse().slice(0, 4)); // Get top 4 newest beats/songs
+        const feedRes = await axios.get(`${BACKEND_URL}/api/feed`, { headers: { Authorization: `Bearer ${token}` } });
+        const feedData = Array.isArray(feedRes.data) ? feedRes.data : (feedRes.data.posts || []);
+        
+        const audioPosts = feedData.filter((p: any) => p.contentUrl || p.audioUrl);
+        setFeedTracks(audioPosts.reverse().slice(0, 4)); 
       } catch (err) { console.error("Error loading Hub data", err); }
     };
     if (activeTab === 'hub') fetchHubData();
@@ -88,12 +91,10 @@ export default function ListenerMaster() {
 
         <nav className="flex flex-col gap-4 flex-1 w-full px-5 overflow-y-auto custom-scrollbar py-2">
           
-          {/* 🔥 SONIC VAULT BUTTON 🔥 */}
           <button onClick={() => setActiveTab('sonic_vault')} className={`w-full aspect-square rounded-[1rem] flex flex-col items-center justify-center transition-all duration-500 group relative overflow-hidden ${activeTab === 'sonic_vault' ? 'bg-[#0A1128] text-white shadow-[0_10px_20px_rgba(0,0,0,0.2)] scale-105' : 'bg-white border border-[#6B7AE5]/30 hover:bg-[#0A1128] text-[#6B7AE5] hover:text-white shadow-sm'}`}>
             <div className="absolute inset-0 bg-gradient-to-tr from-[#6B7AE5]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-1.5 group-hover:scale-110 transition-transform"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"></path><path d="M12 12a4 4 0 1 0 4 4A4 4 0 0 0 12 12z"></path></svg>
             <span className="text-[7px] font-black font-mono tracking-[0.2em] uppercase relative z-10">Sonic Vault</span>
-            {/* Ping indicator if a track is playing globally but we are not in vault */}
             {currentTrack && activeTab !== 'sonic_vault' && <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#E63946] animate-pulse shadow-[0_0_10px_#E63946]"></span>}
           </button>
 
@@ -148,19 +149,18 @@ export default function ListenerMaster() {
           </header>
         )}
 
-        {/* 🔥 MAIN WRAPPER: Handles perfect scrolling 🔥 */}
         <main className="flex-1 relative z-20 w-full overflow-y-auto custom-scrollbar">
           
           {activeTab !== 'sonic_vault' && (
             <div className="pt-24 pb-16 px-10 lg:px-16 border-b border-[#0A1128]/5 overflow-hidden">
                 <div className="overflow-hidden">
                    <h1 className="hero-title text-[11vw] md:text-[9vw] leading-[0.8] font-black uppercase tracking-tighter text-[#0A1128] m-0">
-                      {activeTab === 'hub' ? 'AUDIO' : activeTab === 'feed' ? 'GLOBAL' : activeTab === 'trending' ? 'TRENDING' : 'PRIVATE'}
+                      {activeTab === 'hub' ? 'AUDIO' : activeTab === 'feed' ? 'GLOBAL' : activeTab === 'trending' ? 'TRENDING' : activeTab === 'profile' ? 'YOUR' : 'PRIVATE'}
                    </h1>
                 </div>
                 <div className="overflow-hidden">
                    <h1 className="hero-title text-[12vw] md:text-[10vw] leading-[0.8] font-serif italic tracking-tighter text-[#6B7AE5] m-0 pr-4">
-                      {activeTab === 'hub' ? 'Sanctuary.' : activeTab === 'feed' ? 'Feed.' : activeTab === 'trending' ? 'Charts.' : 'Vault.'}
+                      {activeTab === 'hub' ? 'Sanctuary.' : activeTab === 'feed' ? 'Feed.' : activeTab === 'trending' ? 'Charts.' : activeTab === 'profile' ? 'Identity.' : 'Vault.'}
                    </h1>
                 </div>
             </div>
@@ -172,7 +172,6 @@ export default function ListenerMaster() {
                 <GodModePlayer 
                   currentTrack={currentTrack} 
                   onTakeover={() => {
-                    // Stop global audio to avoid echo when GodMode takes over
                     if (isGlobalPlaying) togglePlayPause(); 
                   }} 
                 />
@@ -209,7 +208,6 @@ export default function ListenerMaster() {
                         <div 
                           key={item._id} 
                           onClick={() => { 
-                            // Play via Global Audio Context natively!
                             playTrack({
                               _id: item._id,
                               title: item.title,
@@ -219,7 +217,6 @@ export default function ListenerMaster() {
                               creatorId: item.creatorId,
                               coverImage: item.coverImage || item.creatorProfileImage || `https://api.dicebear.com/7.x/shapes/svg?seed=${item._id}`
                             });
-                            // Then send user to the Vault to Vibe!
                             setActiveTab('sonic_vault'); 
                           }} 
                           className="bg-white border-[#0A1128]/5 border p-10 rounded-[2rem] hover:-translate-y-2 transition-all duration-500 shadow-[0_10px_30px_rgba(0,0,0,0.02)] group cursor-pointer relative overflow-hidden"
@@ -270,6 +267,9 @@ export default function ListenerMaster() {
           {activeTab === 'feed' && <div className="w-full stagger-fade p-8 lg:p-16 max-w-[1800px] mx-auto pb-40"><GlobalFeed /></div>}
           {activeTab === 'trending' && <div className="w-full stagger-fade p-8 lg:p-16 max-w-[1800px] mx-auto pb-40"><TrendingCharts /></div>}
           {activeTab === 'vault' && <div className="w-full stagger-fade p-8 lg:p-16 max-w-[1800px] mx-auto pb-40"><ListenerVault /></div>}
+          
+          {/* 🔥 THE FIXED RENDER FOR PROFILE 🔥 */}
+          {activeTab === 'profile' && <div className="w-full stagger-fade p-8 lg:p-16 max-w-[1800px] mx-auto pb-40"><UserProfile /></div>}
           
         </main>
       </div>

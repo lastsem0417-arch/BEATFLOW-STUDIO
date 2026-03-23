@@ -60,7 +60,7 @@ export default function LyricistChat({ selectedUser, currentUser }: any) {
     socket.emit('send_message', messagePayload);
 
     try {
-      await axios.post('import.meta.env.VITE_API_URL/api/chat/send', messagePayload, {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/chat/send`, messagePayload, {
         headers: { Authorization: `Bearer ${currentUser.token}` }
       });
     } catch (err) { setReplyText(currentReply); }

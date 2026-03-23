@@ -112,7 +112,7 @@ export default function StudioCanvas() {
       formData.append('trackType', 'vocal');
       
       try {
-        const res = await axios.post('import.meta.env.VITE_API_URL/api/tracks/upload', formData);
+        const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/tracks/upload`, formData);
         await fetchLibrary();
         // Load recorded audio into the selected track
         setTracks(prev => prev.map(t => t.id === activeTrackId ? { ...t, audioUrl: res.data.audioUrl, title: res.data.title } : t));

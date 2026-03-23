@@ -39,12 +39,10 @@ export default function CollabLobby({ onEnterRoom }: { onEnterRoom?: (roomId: st
     const fetchRooms = async () => {
       try {
         const config = { headers: { Authorization: `Bearer ${user.token}` } };
-        // Hit your backend route (You need to create this in your Node.js)
-        const res = await axios.get('http://localhost:5000/api/collab/rooms', config);
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/collab/rooms`, config);
         setRooms(res.data || []);
       } catch (err) {
         console.error("Error fetching rooms from DB. Please ensure backend route exists.", err);
-        // Fallback clear if backend fails
         setRooms([]); 
       } finally {
         setIsLoading(false);
@@ -85,11 +83,10 @@ export default function CollabLobby({ onEnterRoom }: { onEnterRoom?: (roomId: st
         creatorRole: myRole
       };
 
-      // Create room in Database
-      const res = await axios.post('http://localhost:5000/api/collab/rooms', payload, config);
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/collab/rooms`, payload, config);
       
       const newlyCreatedRoom = res.data;
-      setRooms([newlyCreatedRoom, ...rooms]); // Add to top of list
+      setRooms([newlyCreatedRoom, ...rooms]); 
       
       setShowCreateModal(false);
       setNewRoomName('');
@@ -120,8 +117,7 @@ export default function CollabLobby({ onEnterRoom }: { onEnterRoom?: (roomId: st
     try {
       const config = { headers: { Authorization: `Bearer ${user.token}` } };
       
-      // Send passcode to backend for verification
-      const res = await axios.post('http://localhost:5000/api/collab/rooms/join', {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/collab/rooms/join`, {
         roomId: showJoinModal.room?._id,
         passcode: joinPasscode
       }, config);
@@ -159,11 +155,8 @@ export default function CollabLobby({ onEnterRoom }: { onEnterRoom?: (roomId: st
 
   return (
     <div ref={containerRef} className="w-full min-h-full font-sans select-none relative overflow-hidden" style={{ backgroundColor: theme.bg, color: theme.text }}>
-      
-      {/* Subtle Background Accent Glow */}
       <div className="absolute top-[-10%] right-[-5%] w-[40vw] h-[40vw] blur-[150px] rounded-full pointer-events-none opacity-10 -z-10" style={{ backgroundColor: theme.accent }}></div>
 
-      {/* --- HEADER --- */}
       <div className="lobby-header flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-16 px-2">
          <div>
             <h1 className="text-5xl md:text-7xl font-black tracking-tighter mb-2">Sync <span className="font-serif italic" style={{ color: theme.accent }}>Forge.</span></h1>
@@ -182,7 +175,6 @@ export default function CollabLobby({ onEnterRoom }: { onEnterRoom?: (roomId: st
          </button>
       </div>
 
-      {/* --- ACTIVE ROOMS GRID --- */}
       {rooms.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-20 border border-dashed rounded-[3rem] text-center" style={{ borderColor: `${theme.text}20`, backgroundColor: theme.card }}>
            <span className="text-5xl mb-6 opacity-30 grayscale">🎙️</span>
@@ -233,7 +225,6 @@ export default function CollabLobby({ onEnterRoom }: { onEnterRoom?: (roomId: st
         </div>
       )}
 
-      {/* 🟢 CREATE ROOM MODAL */}
       {showCreateModal && (
         <div className="fixed inset-0 z-[9999] bg-[#111]/40 backdrop-blur-md flex items-center justify-center p-4">
            <div className="w-full max-w-md rounded-[2.5rem] p-8 md:p-12 relative overflow-hidden border shadow-2xl animate-in zoom-in duration-300" style={{ backgroundColor: theme.card, borderColor: `${theme.text}10`, color: theme.text }}>
@@ -253,7 +244,6 @@ export default function CollabLobby({ onEnterRoom }: { onEnterRoom?: (roomId: st
                       value={newRoomName} onChange={e => setNewRoomName(e.target.value)}
                       placeholder="e.g. Studio Cookup"
                       className="w-full bg-[#F4F5F7] border border-[#111]/5 rounded-xl p-4 text-sm font-bold outline-none transition-all disabled:opacity-50"
-                      style={{ focusRingColor: theme.accent }}
                     />
                  </div>
 
@@ -277,7 +267,6 @@ export default function CollabLobby({ onEnterRoom }: { onEnterRoom?: (roomId: st
         </div>
       )}
 
-      {/* 🔴 JOIN ROOM MODAL */}
       {showJoinModal.isOpen && (
         <div className="fixed inset-0 z-[9999] bg-[#111]/40 backdrop-blur-md flex items-center justify-center p-4">
            <div className="w-full max-w-sm rounded-[2.5rem] p-8 md:p-10 relative overflow-hidden border shadow-2xl animate-in zoom-in duration-300" style={{ backgroundColor: theme.card, borderColor: `${theme.text}10`, color: theme.text }}>
@@ -310,7 +299,6 @@ export default function CollabLobby({ onEnterRoom }: { onEnterRoom?: (roomId: st
            </div>
         </div>
       )}
-
     </div>
   );
 }

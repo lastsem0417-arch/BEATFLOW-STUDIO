@@ -5,6 +5,9 @@ import gsap from 'gsap';
 
 let socket: Socket;
 
+// 🔥 VITE ENV API URL FETCH 🔥
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function LyricistHub() {
   const currentUser = JSON.parse(sessionStorage.getItem('beatflow_user') || '{}');
   const safeUserId = currentUser.id || currentUser._id;
@@ -29,7 +32,8 @@ export default function LyricistHub() {
     const fetchUsers = async () => {
       try {
         const token = currentUser.token;
-        const res = await axios.get('import.meta.env.VITE_API_URL/api/users/all', {
+        // 🚨 FIX: URL Syntax
+        const res = await axios.get(`${BACKEND_URL}/api/users/all`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setAllUsers(res.data);
@@ -40,7 +44,8 @@ export default function LyricistHub() {
 
   useEffect(() => {
     if (!safeUserId) return;
-    socket = io('import.meta.env.VITE_API_URL');
+    // 🚨 FIX: Socket Connection URL
+    socket = io(BACKEND_URL);
     socket.emit('join_room', safeUserId);
     
     socket.on('receive_message', (data) => {
@@ -57,12 +62,14 @@ export default function LyricistHub() {
       try {
         const token = currentUser.token;
         
-        const chatRes = await axios.get(`import.meta.env.VITE_API_URL/api/chat/direct/${selectedUser._id}`, {
+        // 🚨 FIX: URL Syntax
+        const chatRes = await axios.get(`${BACKEND_URL}/api/chat/direct/${selectedUser._id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setChatMessages(chatRes.data);
 
-        const trackRes = await axios.get(`import.meta.env.VITE_API_URL/api/tracks/user/${selectedUser._id}`, {
+        // 🚨 FIX: URL Syntax
+        const trackRes = await axios.get(`${BACKEND_URL}/api/tracks/user/${selectedUser._id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setUserPortfolio(trackRes.data);
@@ -107,7 +114,8 @@ export default function LyricistHub() {
     socket.emit('send_message', messagePayload);
     
     try {
-      await axios.post('import.meta.env.VITE_API_URL/api/chat/send', messagePayload, {
+      // 🚨 FIX: URL Syntax
+      await axios.post(`${BACKEND_URL}/api/chat/send`, messagePayload, {
          headers: { Authorization: `Bearer ${currentUser.token}` } 
       });
     } catch (err) { setReplyText(currentReply); }

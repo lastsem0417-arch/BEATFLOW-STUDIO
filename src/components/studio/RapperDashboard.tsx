@@ -13,7 +13,7 @@ import { useAudio } from '../../context/AudioContext';
 // 🔥 COMPONENTS IMPORT 🔥
 import CollabLobby from '../CollabLobby'; 
 import CollabStudio from '../CollabStudio';
-import SmartSplitter from '../SmartSplitter'; // 👈 SMART SPLITTER YAHAN HAI
+import SmartSplitter from '../SmartSplitter'; 
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -40,7 +40,7 @@ export default function RapperDashboard() {
     return savedRoom ? JSON.parse(savedRoom) : null;
   });
 
-  // 🔥 ACTIVE TAB STATE UPDATED WITH 'splitter' 🔥
+  // 🔥 ACTIVE TAB STATE UPDATED WITH 'splitter' AND 'chat' 🔥
   const [activeTab, setActiveTab] = useState<'home' | 'network' | 'chat' | 'vault' | 'collab' | 'splitter'>(
     currentCollabRoom ? 'collab' : 'home'
   );
@@ -54,11 +54,13 @@ export default function RapperDashboard() {
     const fetchDashboardData = async () => {
       try {
         const config = { headers: { Authorization: `Bearer ${user.token}` } };
-        const beatsRes = await axios.get('import.meta.env.VITE_API_URL/api/tracks/type/beat', config);
+        // 🚨 FIX: URL syntax fixed
+        const beatsRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/tracks/type/beat`, config);
         setProducerBeats(Array.isArray(beatsRes.data) ? beatsRes.data : []);
 
         if (userId) {
-          const vaultRes = await axios.get('import.meta.env.VITE_API_URL/api/projects/my-vault', config);
+          // 🚨 FIX: URL syntax fixed
+          const vaultRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/projects/my-vault`, config);
           setVaultProjects(Array.isArray(vaultRes.data) ? vaultRes.data : []);
         }
       } catch (err) { console.error("Data Fetch Error:", err); }
@@ -113,7 +115,8 @@ export default function RapperDashboard() {
         <button 
           onClick={() => {
             setIsDawOpen(false);
-            axios.get('import.meta.env.VITE_API_URL/api/projects/my-vault', { headers: { Authorization: `Bearer ${user.token}` }})
+            // 🚨 FIX: URL syntax fixed
+            axios.get(`${import.meta.env.VITE_API_URL}/api/projects/my-vault`, { headers: { Authorization: `Bearer ${user.token}` }})
               .then(res => setVaultProjects(Array.isArray(res.data) ? res.data : []))
               .catch(err => console.error(err));
           }} 
@@ -127,7 +130,6 @@ export default function RapperDashboard() {
   }
 
   return (
-    // 🔥 NATURAL SCROLLING RESTORED (min-h-screen, overflow-x-hidden ONLY) 🔥
     <div ref={containerRef} className="min-h-screen bg-[#F4F3EF] text-[#111111] flex font-sans relative select-none overflow-x-hidden selection:bg-[#E63946] selection:text-white">
       
       <div className="fixed inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-[0.04] pointer-events-none z-0 mix-blend-multiply"></div>
@@ -178,6 +180,12 @@ export default function RapperDashboard() {
             <span className="text-[8px] font-black font-mono uppercase tracking-[0.2em]">Feed</span>
           </button>
 
+          {/* 🚨 THE MISSING CHAT (COMMS) BUTTON IS BACK! 🚨 */}
+          <button onClick={() => {setActiveTab('chat'); setCurrentCollabRoom(null);}} className={`sidebar-btn flex flex-col items-center justify-center transition-all duration-300 group ${activeTab === 'chat' ? 'text-[#E63946]' : 'text-[#111]/40 hover:text-[#111]'}`}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mb-2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            <span className="text-[8px] font-black font-mono uppercase tracking-[0.2em]">Comms</span>
+          </button>
+
           <button onClick={() => {setActiveTab('vault'); setCurrentCollabRoom(null);}} className={`sidebar-btn flex flex-col items-center justify-center transition-all duration-300 group ${activeTab === 'vault' ? 'text-[#E63946]' : 'text-[#111]/40 hover:text-[#111]'}`}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="mb-2"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>
             <span className="text-[8px] font-black font-mono uppercase tracking-[0.2em]">Vault</span>
@@ -209,17 +217,16 @@ export default function RapperDashboard() {
           </header>
         )}
 
-        {/* 🚨 NO SCROLL LOCKS HERE. JUST NATURAL FLOW 🚨 */}
         <main ref={mainRef} className="flex-1 relative z-20 w-full pb-32">
             
            {/* TITLE AREA */}
            {activeTab !== 'collab' && activeTab !== 'splitter' && (
              <div className="pt-24 pb-20 px-10 lg:px-16 border-b border-[#111]/5 overflow-hidden text-center md:text-left">
                 <h1 className="hero-title text-[11vw] md:text-[9vw] leading-[0.8] font-black uppercase tracking-tighter text-[#111]">
-                   {activeTab === 'home' ? 'VOCAL' : activeTab === 'vault' ? 'PRIVATE' : activeTab === 'network' ? 'GLOBAL' : 'SECURE'}
+                   {activeTab === 'home' ? 'VOCAL' : activeTab === 'vault' ? 'PRIVATE' : activeTab === 'network' ? 'GLOBAL' : activeTab === 'chat' ? 'COMMS' : 'SECURE'}
                 </h1>
                 <h1 className="hero-title text-[12vw] md:text-[10vw] leading-[0.8] font-serif italic tracking-tighter text-[#E63946]">
-                   {activeTab === 'home' ? 'Chamber.' : activeTab === 'vault' ? 'Archive.' : activeTab === 'network' ? 'Network.' : 'Comms.'}
+                   {activeTab === 'home' ? 'Chamber.' : activeTab === 'vault' ? 'Archive.' : activeTab === 'network' ? 'Network.' : activeTab === 'chat' ? 'Channel.' : 'System.'}
                 </h1>
              </div>
            )}
@@ -334,11 +341,11 @@ export default function RapperDashboard() {
            )}
 
            {activeTab === 'network' && <div className="p-10 lg:p-16 pb-32 max-w-[1800px] mx-auto"><GlobalFeed /></div>}
+           {/* 🚨 COMMS (CHAT) TAB CONTENT RESTORED 🚨 */}
            {activeTab === 'chat' && <div className="p-10 lg:p-16 pb-32 max-w-[1800px] mx-auto"><RapperNetwork setIsDawOpen={setIsDawOpen} /></div>}
         </main>
       </div>
 
-      {/* GLOBAL CUSTOM SCROLLBAR FOR ENTIRE PAGE */}
       <style>{`
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #F4F3EF; }

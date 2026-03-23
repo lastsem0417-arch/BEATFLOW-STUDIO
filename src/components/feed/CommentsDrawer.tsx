@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 
+// 🔥 VITE ENV API URL FETCH 🔥
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function CommentsDrawer({ post, onClose, onCommentAdded }: any) {
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,7 +27,8 @@ export default function CommentsDrawer({ post, onClose, onCommentAdded }: any) {
 
     setLoading(true);
     try {
-      const res = await axios.post(`import.meta.env.VITE_API_URL/api/feed/${post._id}/comment`, { text }, {
+      // 🚨 FIX: URL Syntax Fixed
+      const res = await axios.post(`${BACKEND_URL}/api/feed/${post._id}/comment`, { text }, {
         headers: { Authorization: `Bearer ${loggedInUser.token}` }
       });
       

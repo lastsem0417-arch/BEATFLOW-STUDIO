@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
+// 🔥 VITE ENV API URL FETCH 🔥
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 export default function CreateDropModal({ onClose, onSuccess }: any) {
   const user = JSON.parse(sessionStorage.getItem('beatflow_user') || '{}');
   const role = user.role?.toLowerCase() || 'producer';
@@ -16,11 +19,11 @@ export default function CreateDropModal({ onClose, onSuccess }: any) {
   });
   const [uploading, setUploading] = useState(false);
 
-  // 🔥 DYNAMIC ROLE THEME (Premium Colors) 🔥
+  // 🔥 DYNAMIC ROLE THEME 🔥
   const getRoleTheme = () => {
-    if (role === 'rapper') return { hex: '#E63946', shadow: 'rgba(230,57,70,0.3)' }; // Crimson
-    if (role === 'lyricist') return { hex: '#10B981', shadow: 'rgba(16,185,129,0.3)' }; // Emerald
-    return { hex: '#D4AF37', shadow: 'rgba(212,175,55,0.3)' }; // Gold for Producer
+    if (role === 'rapper') return { hex: '#E63946', shadow: 'rgba(230,57,70,0.3)' }; 
+    if (role === 'lyricist') return { hex: '#10B981', shadow: 'rgba(16,185,129,0.3)' }; 
+    return { hex: '#D4AF37', shadow: 'rgba(212,175,55,0.3)' }; 
   };
   const theme = getRoleTheme();
 
@@ -43,15 +46,21 @@ export default function CreateDropModal({ onClose, onSuccess }: any) {
       data.append('lookingFor', formData.lookingFor);
       data.append('bounty', formData.bounty || 'Open terms');
       
+      // 🔥 FIX 1: Backend ko batana zaroori hai ki trackType kya hai 🔥
+      const trackType = role === 'producer' ? 'beat' : (role === 'rapper' ? 'vocal' : 'lyrics');
+      data.append('trackType', trackType);
+
       if (role === 'lyricist') {
         data.append('lyricsText', formData.lyricsText);
       }
 
+      // 🔥 Multer sirf 'file' field accept karta hai 🔥
       if (file) {
         data.append('file', file); 
       }
 
-      await axios.post('import.meta.env.VITE_API_URL/api/feed/upload', data, {
+      // 🔥 FIX 2: Hardcoded localhost ki jagah BACKEND_URL use kiya 🔥
+      await axios.post(`${BACKEND_URL}/api/feed/upload`, data, {
         headers: { 
           'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${user.token}` 
@@ -70,33 +79,26 @@ export default function CreateDropModal({ onClose, onSuccess }: any) {
 
   return (
     <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 sm:p-8 font-sans select-none overflow-hidden text-[#111111]">
-      
-      {/* 🌫️ Premium Frosted Backdrop */}
       <div 
         className="absolute inset-0 bg-[#111111]/40 backdrop-blur-md animate-in fade-in duration-500 transition-opacity"
         onClick={uploading ? undefined : onClose}
       ></div>
 
-      {/* 📝 THE LUXURY MODAL */}
-      <div className="w-full max-w-2xl bg-white border border-[#111111]/5 rounded-[3rem] p-10 md:p-14 relative overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.2)] animate-in zoom-in-[0.98] slide-in-from-bottom-8 fade-in duration-700 ease-[cubic-bezier(0.76,0,0.24,1)]">
+      <div className="w-full max-w-2xl bg-white border border-[#111111]/5 rounded-[3rem] p-10 md:p-14 relative overflow-hidden shadow-[0_40px_80px_rgba(0,0,0,0.2)] animate-in zoom-in-[0.98] slide-in-from-bottom-8 fade-in duration-700">
         
-        {/* Dynamic Ambient Glow inside the modal */}
         <div 
           className="absolute top-[-20%] right-[-10%] w-96 h-96 blur-[100px] rounded-full pointer-events-none -z-10 opacity-15 transition-colors duration-1000" 
           style={{ backgroundColor: theme.hex }}
         ></div>
 
-        {/* ✕ Close Button */}
         <button 
           onClick={onClose} 
           disabled={uploading}
           className="absolute top-10 right-10 w-12 h-12 rounded-full border border-[#111111]/10 bg-[#F4F5F7] flex items-center justify-center text-[#111111]/40 hover:text-[#E63946] hover:bg-white hover:border-[#E63946]/30 hover:shadow-sm transition-all duration-300 active:scale-95 disabled:opacity-50 group z-20"
-          title="Close Form"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:rotate-90 transition-transform duration-500"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
 
-        {/* 🎩 Editorial Header */}
         <div className="mb-12 pr-12 relative z-10">
           <h2 className="text-4xl md:text-5xl font-serif italic text-[#111111] leading-tight tracking-tight mb-3">Publish Asset</h2>
           <p className="text-[9px] uppercase tracking-[0.4em] font-black flex items-center gap-2 font-mono text-[#111111]/50">
@@ -107,7 +109,6 @@ export default function CreateDropModal({ onClose, onSuccess }: any) {
 
         <form onSubmit={handleUpload} className="flex flex-col gap-6 relative z-10">
           
-          {/* 🎵 FILE UPLOAD FOR PRODUCERS/RAPPERS */}
           {role !== 'lyricist' && (
             <div className="relative group cursor-pointer mb-2">
               <input 
@@ -134,7 +135,6 @@ export default function CreateDropModal({ onClose, onSuccess }: any) {
             </div>
           )}
 
-          {/* 📝 LYRICS BOX FOR LYRICISTS */}
           {role === 'lyricist' && (
             <div className="relative group mb-2">
               <span className="absolute top-4 right-5 text-[8px] uppercase tracking-widest font-black font-mono opacity-60" style={{ color: theme.hex }}>Draft</span>
@@ -150,15 +150,12 @@ export default function CreateDropModal({ onClose, onSuccess }: any) {
             </div>
           )}
 
-          {/* 🗂️ METADATA INPUTS */}
           <div className="space-y-5">
             <input 
               type="text" required placeholder="Asset Title" 
               className="w-full bg-[#F4F5F7] border border-[#111111]/10 rounded-[1.2rem] px-6 py-4 text-sm text-[#111111] font-medium outline-none transition-all duration-300 shadow-inner placeholder:text-[#111111]/40 focus:bg-white" 
               onChange={(e) => setFormData({...formData, title: e.target.value})} 
               disabled={uploading}
-              onFocus={(e) => { e.target.style.borderColor = theme.hex; }}
-              onBlur={(e) => { e.target.style.borderColor = 'rgba(17,17,17,0.1)'; }}
             />
             
             <textarea 
@@ -167,8 +164,6 @@ export default function CreateDropModal({ onClose, onSuccess }: any) {
               className="w-full bg-[#F4F5F7] border border-[#111111]/10 rounded-[1.2rem] px-6 py-4 text-sm text-[#111111] font-medium h-24 outline-none resize-none transition-all duration-300 shadow-inner placeholder:text-[#111111]/40 focus:bg-white custom-scrollbar" 
               onChange={(e) => setFormData({...formData, description: e.target.value})}
               disabled={uploading}
-              onFocus={(e) => { e.target.style.borderColor = theme.hex; }}
-              onBlur={(e) => { e.target.style.borderColor = 'rgba(17,17,17,0.1)'; }}
             />
 
             <div className="grid grid-cols-2 gap-5">
@@ -177,21 +172,16 @@ export default function CreateDropModal({ onClose, onSuccess }: any) {
                 className="bg-[#F4F5F7] border border-[#111111]/10 rounded-[1.2rem] px-6 py-4 text-sm text-[#111111] font-medium outline-none transition-all duration-300 shadow-inner placeholder:text-[#111111]/40 focus:bg-white" 
                 onChange={(e) => setFormData({...formData, genre: e.target.value})} 
                 disabled={uploading}
-                onFocus={(e) => { e.target.style.borderColor = theme.hex; }}
-                onBlur={(e) => { e.target.style.borderColor = 'rgba(17,17,17,0.1)'; }}
               />
               <input 
                 type="text" placeholder="Looking For (e.g. Rapper)" 
                 className="bg-[#F4F5F7] border border-[#111111]/10 rounded-[1.2rem] px-6 py-4 text-sm text-[#111111] font-medium outline-none transition-all duration-300 shadow-inner placeholder:text-[#111111]/40 focus:bg-white" 
                 onChange={(e) => setFormData({...formData, lookingFor: e.target.value})} 
                 disabled={uploading}
-                onFocus={(e) => { e.target.style.borderColor = theme.hex; }}
-                onBlur={(e) => { e.target.style.borderColor = 'rgba(17,17,17,0.1)'; }}
               />
             </div>
           </div>
 
-          {/* ⚡ ACTION BUTTON */}
           <button 
             type="submit"
             disabled={uploading}
@@ -214,10 +204,8 @@ export default function CreateDropModal({ onClose, onSuccess }: any) {
               </>
             )}
           </button>
-
         </form>
 
-        {/* Custom Scrollbar for Textareas */}
         <style>{`
           .custom-scrollbar::-webkit-scrollbar { width: 6px; }
           .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }

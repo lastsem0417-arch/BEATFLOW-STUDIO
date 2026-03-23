@@ -16,11 +16,12 @@ export default function LyricistVault() {
   const fetchVault = async () => {
     try {
       const token = currentUser.token;
-      const res = await axios.get('import.meta.env.VITE_API_URL/api/projects/my-vault', {
+      // 🚨 FIX: URL syntax and Array Safety
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/projects/my-vault`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      // Sort by newest first
-      const sorted = res.data.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      const vaultData = Array.isArray(res.data) ? res.data : (res.data.projects || []);
+      const sorted = vaultData.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setVaultItems(sorted);
       setIsLoading(false);
     } catch (err) {
@@ -39,7 +40,8 @@ export default function LyricistVault() {
 
     try {
       const token = currentUser.token;
-      await axios.delete(`import.meta.env.VITE_API_URL/api/projects/delete/${id}`, {
+      // 🚨 FIX: URL Syntax
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/projects/delete/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setVaultItems(prev => prev.filter(item => item._id !== id));
@@ -62,13 +64,10 @@ export default function LyricistVault() {
   );
 
   return (
-    // 🔥 PREMIUM LIGHT CANVAS 🔥
     <div className="flex-1 bg-white p-10 lg:p-16 flex flex-col relative z-10 h-full overflow-hidden border border-[#0A1A14]/5 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.03)] font-sans text-[#0A1A14]">
         
-        {/* Ambient Top Glow */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#10B981]/5 blur-[100px] rounded-full pointer-events-none opacity-50"></div>
 
-        {/* 🗂️ HEADER & SEARCH BAR */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-12 border-b border-[#0A1A14]/10 pb-8 gap-6 relative z-10">
             <div>
                 <h2 className="text-4xl md:text-5xl font-serif italic text-[#0A1A14] tracking-tight">Private Vault<span className="text-[#10B981]">.</span></h2>
@@ -93,7 +92,6 @@ export default function LyricistVault() {
             </div>
         </div>
 
-        {/* 📝 VAULT GRID */}
         {filteredVault.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center opacity-80 select-none border border-dashed border-[#0A1A14]/10 rounded-[2rem] bg-[#F9F8F6]">
                 <div className="w-24 h-24 rounded-full border border-[#10B981]/20 flex items-center justify-center mb-6 relative bg-white shadow-sm">
@@ -104,7 +102,6 @@ export default function LyricistVault() {
                 <p className="text-[10px] uppercase tracking-[0.4em] font-mono text-[#0A1A14]/50 font-bold">{searchTerm ? "Refine your search parameters." : "Initiate a writing session to store data."}</p>
             </div>
         ) : (
-            // 🔥 data-lenis-prevent lagaya hai taaki smooth scrolling maintain rahe 🔥
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 overflow-y-auto custom-scrollbar pb-10 pr-4 h-full" data-lenis-prevent="true">
                 {filteredVault.map((item) => (
                     <div 
@@ -115,8 +112,6 @@ export default function LyricistVault() {
                         
                         <div className="flex justify-between items-start mb-4 relative z-10">
                             <h3 className="text-2xl font-serif italic text-[#0A1A14] truncate pr-4 group-hover:text-[#10B981] transition-colors">{item.name}</h3>
-                            
-                            {/* 🔥 PREMIUM SVG DELETE BUTTON */}
                             <button 
                                 onClick={(e) => handleDelete(e, item._id, item.name)}
                                 className="opacity-0 group-hover:opacity-100 text-[#0A1A14]/30 hover:text-[#E63946] transition-all p-2 z-20 bg-[#F9F8F6] hover:bg-[#E63946]/10 rounded-full border border-transparent hover:border-[#E63946]/30"
