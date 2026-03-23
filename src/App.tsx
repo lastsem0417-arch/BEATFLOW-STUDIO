@@ -11,7 +11,7 @@ import { AudioProvider } from './context/AudioContext';
 import LandingPage from './components/LandingPage'; 
 import RoleSelection from './components/RoleSelection';
 import ProducerMaster from './components/producer/ProducerMaster'; 
-import RapperDashboard from './components/Studio/RapperDashboard';
+import RapperDashboard from './components/studio/RapperDashboard';
 import UserProfile from './components/UserProfile'; 
 
 // 🔥 LYRICIST IMPORTS
