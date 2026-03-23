@@ -10,11 +10,19 @@ const { Server } = require('socket.io');
 const app = express();
 const server = http.createServer(app);
 
+// ==========================================
+// 🔥 DYNAMIC CORS SETUP (Local + Live) 🔥
+// ==========================================
+const allowedOrigins = [
+  'http://localhost:5173', // Tera Local Frontend
+  'https://beatflow-studio-wnt0.onrender.com' // Tera Live Frontend
+];
+
 // 🔥 SOCKET.IO ENGINE SETUP (CRITICAL: 100MB Limit Added) 🔥
 const io = new Server(server, {
   maxHttpBufferSize: 1e8, // 🚨 ISKE BINA BADI AUDIO FILE NAHI JAYEGI (100MB limit)
   cors: {
-    origin: 'http://localhost:5173', 
+    origin: allowedOrigins, 
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true 
   }
@@ -22,7 +30,7 @@ const io = new Server(server, {
 
 // Middlewares
 app.use(cors({
-  origin: 'http://localhost:5173', 
+  origin: allowedOrigins, 
   credentials: true
 }));
 app.use(express.json({ limit: '100mb' })); 
@@ -232,4 +240,4 @@ io.on('connection', (socket) => {
 app.use((req, res) => { res.status(404).json({ message: `Route ${req.url} not found on this server.` }); });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => { console.log(`🚀 BeatFlow Server & Socket Engine running on http://localhost:${PORT}`); });
+server.listen(PORT, () => { console.log(`🚀 BeatFlow Server & Socket Engine running on port ${PORT}`); });
