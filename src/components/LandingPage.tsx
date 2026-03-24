@@ -19,9 +19,18 @@ export default function LandingPage() {
   useEffect(() => {
     const fetchTrending = async () => {
       try {
-        const res = await axios.get('import.meta.env.VITE_API_URL/api/tracks/all');
-        if (Array.isArray(res.data)) setTrendingPosts(res.data.slice(0, 4));
-      } catch (err) { setTrendingPosts([]); }
+        // 🔥 THE FIX: Backticks use kiye hain aur fallback URL daala hai 🔥
+        const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const res = await axios.get(`${backendUrl}/api/tracks/all`);
+        
+        // Safety check in case backend returns an object with a tracks array
+        const tracksArray = Array.isArray(res.data) ? res.data : (res.data.tracks || res.data.data || []);
+        
+        setTrendingPosts(tracksArray.slice(0, 4));
+      } catch (err) { 
+        console.error("Trending Fetch Error:", err);
+        setTrendingPosts([]); 
+      }
     };
     fetchTrending();
   }, []);
