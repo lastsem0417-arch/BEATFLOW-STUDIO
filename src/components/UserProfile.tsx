@@ -7,6 +7,17 @@ import EditProfileModal from './EditProfileModal';
 // 🔥 VITE ENV API URL FETCH 🔥
 const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
+// 🔥 IMAGE URL FIXER (For Live Deployments) 🔥
+const getValidImageUrl = (url: string | undefined | null) => {
+  if (!url) return '';
+  if (url.startsWith('http') || url.includes('cloudinary.com') || url.startsWith('data:image')) {
+    return url;
+  }
+  const baseUrl = BACKEND_URL.endsWith('/') ? BACKEND_URL.slice(0, -1) : BACKEND_URL;
+  const cleanPath = url.replace(/\\/g, '/').replace(/^\//, ''); 
+  return `${baseUrl}/${cleanPath}`;
+};
+
 export default function UserProfile() {
   const { id } = useParams(); 
   const navigate = useNavigate();
@@ -36,7 +47,6 @@ export default function UserProfile() {
     const fetchProfileData = async () => {
       try {
         setLoading(true);
-        // 🚨 FIX: URL Syntax Fixed
         const userRes = await axios.get(`${BACKEND_URL}/api/users/${targetId}`);
         setProfileUser(userRes.data);
         
@@ -44,7 +54,6 @@ export default function UserProfile() {
           setIsFollowing(true);
         }
 
-        // 🚨 FIX: URL Syntax Fixed
         const postsRes = await axios.get(`${BACKEND_URL}/api/feed/user/${targetId}`);
         setUserPosts(Array.isArray(postsRes.data) ? postsRes.data : []);
       } catch (error) {
@@ -59,7 +68,6 @@ export default function UserProfile() {
 
   const handleFollowToggle = async () => {
     try {
-      // 🚨 FIX: URL Syntax Fixed
       await axios.post(`${BACKEND_URL}/api/users/${profileUser._id}/follow`, {}, {
         headers: { Authorization: `Bearer ${loggedInUser.token}` }
       });
@@ -75,16 +83,13 @@ export default function UserProfile() {
     }
   };
 
-  // 🔥 UPDATED PLAY LOGIC (Handles both Audio and Video)
   const handlePlayClick = (e: React.MouseEvent, post: any) => {
     e.stopPropagation();
     
     if (post.videoUrl) {
-      // 🎬 Open Cinematic Video Player
       setActiveVideoUrl(post.videoUrl);
-      if (isPlaying) togglePlayPause(); // Pause background music if video opens
+      if (isPlaying) togglePlayPause(); 
     } else {
-      // 🎵 Play Audio Normally
       if (currentTrack?._id === post._id) {
         togglePlayPause();
       } else {
@@ -95,7 +100,7 @@ export default function UserProfile() {
           creatorName: profileUser.username,
           creatorRole: profileUser.role,
           creatorId: profileUser._id,
-          coverImage: profileUser.profileImage
+          coverImage: profileUser.profileImage // Will be fixed in AudioContext if needed
         });
       }
     }
@@ -111,7 +116,6 @@ export default function UserProfile() {
     const currentLikes = Array.isArray(post.likes) ? post.likes : [];
     const isLiked = currentLikes.includes(currentUserId);
 
-    // Optimistic UI Update
     setUserPosts(prevPosts => prevPosts.map(p => {
       if (p._id === post._id) {
         let newLikes = [...currentLikes];
@@ -125,9 +129,7 @@ export default function UserProfile() {
       return p;
     }));
 
-    // Server Update
     try {
-      // 🚨 FIX: URL Syntax Fixed
       await axios.post(`${BACKEND_URL}/api/feed/${post._id}/like`, {}, {
         headers: { Authorization: `Bearer ${loggedInUser.token}` }
       });
@@ -147,7 +149,6 @@ export default function UserProfile() {
     setExpandedLyrics(prev => ({ ...prev, [postId]: !prev[postId] }));
   };
 
-  // 🎬 PREMIUM PRELOADER
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F4F3EF] flex flex-col items-center justify-center relative overflow-hidden select-none">
@@ -157,7 +158,6 @@ export default function UserProfile() {
     );
   }
 
-  // 🎬 PREMIUM 404 STATE
   if (!profileUser) {
     return (
       <div className="min-h-screen bg-[#F4F3EF] flex flex-col items-center justify-center relative overflow-hidden select-none text-[#111111]">
@@ -172,17 +172,18 @@ export default function UserProfile() {
   const isMe = currentUserId === profileUser._id;
   const isAdminProfile = profileUser.role === 'admin';
 
-  // 🔥 DYNAMIC PREMIUM THEME MAPPER 🔥
   const getTheme = (role: string) => {
     const r = role?.toLowerCase();
     if (r === 'rapper') return { hex: '#E63946', shadow: 'rgba(230,57,70,0.2)' };
     if (r === 'lyricist') return { hex: '#10B981', shadow: 'rgba(16,185,129,0.2)' };
     if (r === 'producer') return { hex: '#D4AF37', shadow: 'rgba(212,175,55,0.2)' };
-    return { hex: '#2563EB', shadow: 'rgba(37,99,235,0.2)' }; // Default Listener
+    return { hex: '#2563EB', shadow: 'rgba(37,99,235,0.2)' }; 
   };
 
   const theme = getTheme(profileUser.role);
-  const avatarSrc = profileUser.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profileUser._id}&backgroundColor=transparent`;
+  
+  // 🔥 FIX 1: AVATAR SOURCE SECURED WITH HELPER 🔥
+  const avatarSrc = getValidImageUrl(profileUser.profileImage) || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profileUser._id}&backgroundColor=transparent`;
 
   // ==========================================
   // 💀 1. THE GOD MODE PROFILE (For Admin)
@@ -237,7 +238,6 @@ export default function UserProfile() {
       {/* 🎬 THE CINEMATIC VIDEO PLAYER OVERLAY 🎬 */}
       {activeVideoUrl && (
         <div className="fixed inset-0 z-[999999] bg-[#050505]/95 backdrop-blur-2xl flex flex-col items-center justify-center animate-in fade-in duration-500">
-          
           <button 
             onClick={() => setActiveVideoUrl(null)} 
             className="absolute top-10 right-10 w-12 h-12 rounded-full border border-white/10 bg-white/5 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 transition-all duration-300 z-50 group shadow-md"
@@ -378,6 +378,9 @@ export default function UserProfile() {
                 const iLikedThis = postLikes.includes(currentUserId);
                 const isExpanded = expandedLyrics[post._id] || false;
 
+                // 🔥 FIX 2: POST COVER IMAGE FIX APPLIED HERE 🔥
+                const postCover = getValidImageUrl(post.coverImage) || avatarSrc;
+
                 return (
                   <div 
                     key={post._id} 
@@ -409,7 +412,7 @@ export default function UserProfile() {
                          
                          {/* Play Button & Cover Art */}
                          <div className="relative w-24 h-24 shrink-0 rounded-[1rem] overflow-hidden bg-white group/playbtn cursor-pointer shadow-sm border border-[#111111]/10" onClick={(e) => handlePlayClick(e, post)}>
-                             <img src={post.coverImage || avatarSrc} className={`w-full h-full object-cover transition-all duration-700 ${isThisPlaying ? 'opacity-50 scale-110 blur-[2px]' : 'opacity-90 group-hover/playbtn:opacity-100 group-hover/playbtn:scale-105'}`} alt="Cover" />
+                             <img src={postCover} className={`w-full h-full object-cover transition-all duration-700 ${isThisPlaying ? 'opacity-50 scale-110 blur-[2px]' : 'opacity-90 group-hover/playbtn:opacity-100 group-hover/playbtn:scale-105'}`} alt="Cover" />
                              <div className="absolute inset-0 flex items-center justify-center bg-[#111111]/10 group-hover/playbtn:bg-[#111111]/20 transition-colors">
                                 
                                 {/* Show Video Play Icon if it has a videoUrl */}
