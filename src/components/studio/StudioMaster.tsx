@@ -18,6 +18,7 @@ export default function StudioMaster() {
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const localStreamRef = useRef<MediaStream | null>(null); // 🔥 ADDED REF FOR STREAM CONTROL
   
   // 🔥 VIDEO RECORDING STATES 🔥
   const [sessionVideoUrl, setSessionVideoUrl] = useState<string | null>(null);
@@ -59,7 +60,6 @@ export default function StudioMaster() {
       const localProjects = JSON.parse(localStorage.getItem('beatflow_projects') || '[]');
       setSavedProjects(localProjects);
       try {
-        // 🚨 FIX: ADDED TEMPLATE LITERALS `${}` TO ALL API CALLS 🚨
         const [vocalRes, beatRes, projectRes] = await Promise.all([
           axios.get(`${import.meta.env.VITE_API_URL}/api/tracks/user/${userId}`),
           axios.get(`${import.meta.env.VITE_API_URL}/api/tracks/type/beat`),
@@ -187,7 +187,6 @@ export default function StudioMaster() {
     return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
   }, [isPlaying, isRecording, tracks]);
 
-  // --- 🔥 THE BULLETPROOF EXPORT ENGINE 🔥 ---
   const handleExport = async () => {
     const activeAudios = tracks.filter(t => t.audioUrl && !t.isMuted);
     if (activeAudios.length === 0) {
@@ -197,7 +196,6 @@ export default function StudioMaster() {
 
     alert("Mixing down your session & packaging video... Please wait.");
     
-    // 1. RENDER AUDIO
     const offlineCtx = new OfflineAudioContext(2, 44100 * duration, 44100);
 
     for (const track of tracks) {
@@ -241,7 +239,6 @@ export default function StudioMaster() {
     audioLink.click();
     document.body.removeChild(audioLink);
 
-    // 2. EXPORT SESSION VIDEO
     if (sessionVideoUrl) {
       setTimeout(() => {
         const videoLink = document.createElement('a');
@@ -282,7 +279,6 @@ export default function StudioMaster() {
     return new Blob([buffer], {type: "audio/wav"});
   }
 
-  // --- ACTIONS ---
   const togglePlay = () => {
     if (isPlaying) {
       setIsPlaying(false);
@@ -327,6 +323,7 @@ export default function StudioMaster() {
     });
   };
 
+  // 🔥 CORE FIX APPLIED HERE 🔥
   const toggleRecord = async () => {
     if (isRecording) { stopEngine(); } 
     else {
@@ -336,6 +333,11 @@ export default function StudioMaster() {
             audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, sampleRate: 44100 } 
         });
         
+        // 🔥 FORCE ENABLE TRACKS FOR RECORDING
+        stream.getAudioTracks().forEach(track => track.enabled = true);
+        stream.getVideoTracks().forEach(track => track.enabled = true);
+        localStreamRef.current = stream;
+
         setIsWebcamActive(true);
         audioChunksRef.current = [];
 
@@ -356,7 +358,7 @@ export default function StudioMaster() {
         pausedTimeRef.current = 0; 
         setIsRecording(true);
         setIsPlaying(true);
-        mediaRecorderRef.current.start();
+        mediaRecorderRef.current.start(100); // Pass timeslice to ensure data flows continuously
         
       } catch (err) { 
         alert("Camera and Mic permissions are required for Director Booth!"); 
@@ -368,9 +370,13 @@ export default function StudioMaster() {
     setIsRecording(false);
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
         mediaRecorderRef.current.stop();
-        mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-        setIsWebcamActive(false);
     }
+    // Stop hardware access
+    if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach(track => track.stop());
+        localStreamRef.current = null;
+    }
+    setIsWebcamActive(false);
   };
 
   const handleUploadTrack = async () => {
@@ -547,7 +553,6 @@ export default function StudioMaster() {
                    placeholder="Name your track..." 
                  />
                  
-                 {/* 🔥 SHOW USER IF VIDEO WILL BE SAVED TO VAULT 🔥 */}
                  {hasFootage && (
                    <p className="text-[9px] text-[#10B981] uppercase tracking-widest mt-4 font-black flex items-center gap-2">
                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>

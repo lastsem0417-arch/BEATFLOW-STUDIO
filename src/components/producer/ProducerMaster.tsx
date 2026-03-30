@@ -20,9 +20,11 @@ import AIStemMixer from './AIStemMixer';
 // 🔥 LOBBY, STUDIO & SPLITTER IMPORTS 🔥
 import CollabLobby from '../CollabLobby'; 
 import CollabStudio from '../CollabStudio';
-import SmartSplitter from '../SmartSplitter'; // 👈 TERA SMART SPLITTER YAHAN AAGAYA
+import SmartSplitter from '../SmartSplitter'; 
 
-// Register ScrollTrigger for premium scroll animations
+// 🔥 CORRECTED PATH FOR BEATFLOW LOGO 🔥
+import BeatFlowLogo from '../BeatFlowLogo'; 
+
 gsap.registerPlugin(ScrollTrigger);
 
 export default function ProducerMaster() {  
@@ -34,13 +36,11 @@ export default function ProducerMaster() {
   const [showDropModal, setShowDropModal] = useState(false);
   const user = JSON.parse(sessionStorage.getItem('beatflow_user') || '{}');
 
-  // 🔥 THE FIX: REFRESH-SAFE ROOM STATE 🔥
   const [currentCollabRoom, setCurrentCollabRoom] = useState<{id: string, role: string} | null>(() => {
     const savedRoom = sessionStorage.getItem('active_collab_room');
     return savedRoom ? JSON.parse(savedRoom) : null;
   });
 
-  // 🔥 UPDATED VIEW STATE 🔥
   const [activeView, setActiveView] = useState<'dashboard' | 'network' | 'chat' | 'collab' | 'splitter'>(
     currentCollabRoom ? 'collab' : 'dashboard'
   );
@@ -49,22 +49,17 @@ export default function ProducerMaster() {
     if (!sessionStorage.getItem('beatflow_user')) navigate('/roles');
   }, [navigate]);
 
-  // 🔥 GSAP PREMIUM EDITORIAL ANIMATIONS 🔥
   useLayoutEffect(() => {
     if (activeView === 'collab' || activeView === 'splitter') return; 
     
     let ctx = gsap.context(() => {
-      
-      // 1. Massive Top Text Reveal
       gsap.fromTo('.hero-title', 
         { yPercent: 120, opacity: 0, rotateX: 10 }, 
         { yPercent: 0, opacity: 1, rotateX: 0, duration: 1.5, stagger: 0.1, ease: 'expo.out', delay: 0.1 }
       );
 
-      // 2. Sidebar & Header smooth entry
       gsap.fromTo('.sidebar-btn', { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 1, stagger: 0.1, ease: 'power3.out', delay: 0.4 });
       
-      // 3. Scroll Reveal for components
       const scrollElements = gsap.utils.toArray('.scroll-reveal');
       if (scrollElements.length > 0) {
         gsap.fromTo(scrollElements, 
@@ -82,14 +77,12 @@ export default function ProducerMaster() {
           }
         );
       }
-
     }, containerRef);
     
     return () => ctx.revert();
   }, [activeView, refreshTrigger]);
 
   return (
-    // 🔥 NATURAL SCROLLING RESTORED (min-h-screen, overflow-x-hidden ONLY) 🔥
     <div ref={containerRef} className="min-h-screen bg-[#F4F3EF] text-[#001433] flex font-sans relative select-none overflow-x-hidden selection:bg-[#D4AF37] selection:text-white">
       
       <div className="fixed inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-[0.04] pointer-events-none z-0 mix-blend-multiply"></div>
@@ -102,15 +95,17 @@ export default function ProducerMaster() {
       {/* --- SLEEK MINIMAL SIDEBAR --- */}
       <aside className="w-24 md:w-28 shrink-0 sticky top-0 h-screen border-r border-[#001433]/10 bg-[#F4F3EF] flex flex-col items-center py-10 z-50 overflow-y-auto custom-scrollbar">
         
+        {/* 🔥 YAHAN TERA NAYA LOGO AAGAYA 🔥 */}
+       {/* 🔥 YAHAN TERA NAYA EKDUM PREMIUM LOGO 🔥 */}
         <div 
-          className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-white border border-[#001433]/10 flex items-center justify-center shadow-[0_10px_30px_rgba(0,0,0,0.05)] hover:border-[#D4AF37] hover:shadow-[0_10px_30px_rgba(212,175,55,0.2)] transition-all duration-500 cursor-pointer group shrink-0" 
+          className="cursor-pointer mb-6 mt-2 flex justify-center items-center" 
           onClick={() => navigate('/')}
           title="Back to Base"
         >
-           <span className="font-serif italic text-2xl text-[#001433] group-hover:text-[#D4AF37] transition-colors">BF</span>
+           <BeatFlowLogo className="w-16 h-16 md:w-20 md:h-20" />
         </div>
         
-        <nav className="flex flex-col gap-6 flex-1 mt-10 w-full px-5 pb-8">
+        <nav className="flex flex-col gap-6 flex-1 mt-6 w-full px-5 pb-8">
           
           <button onClick={() => setActiveView('collab')} className={`sidebar-btn w-full aspect-square rounded-[1rem] flex flex-col items-center justify-center transition-all duration-500 group relative overflow-hidden ${activeView === 'collab' ? 'bg-[#001433] text-white shadow-[0_10px_20px_rgba(0,0,0,0.1)] scale-105' : 'bg-white border border-[#D4AF37]/30 hover:bg-[#001433] text-[#D4AF37] hover:text-white shadow-sm'}`}>
             <div className="absolute inset-0 bg-gradient-to-tr from-[#D4AF37]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -118,7 +113,6 @@ export default function ProducerMaster() {
             <span className="text-[7px] font-black font-mono tracking-[0.2em] uppercase relative z-10">Collab</span>
           </button>
 
-          {/* 🔥 NAYA SPLITTER TAB 🔥 */}
           <button onClick={() => {setActiveView('splitter'); setCurrentCollabRoom(null);}} className={`sidebar-btn flex flex-col items-center justify-center transition-all duration-300 group ${activeView === 'splitter' ? 'text-[#D4AF37]' : 'text-[#001433]/40 hover:text-[#001433]'}`}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-2 group-hover:-translate-y-1 transition-transform"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
             <span className="text-[8px] font-black font-mono uppercase tracking-[0.2em]">Royalty</span>
