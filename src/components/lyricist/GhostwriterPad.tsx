@@ -13,7 +13,7 @@ export default function GhostwriterPad({ selectedUser, currentUser }: any) {
     const loadContext = async () => {
       try {
         // Fetch Target User's Tracks
-        const res = await axios.get(`http://localhost:5000/api/tracks/user/${selectedUser._id}`, { 
+        const res = await axios.get(`import.meta.env.VITE_API_URL/api/tracks/user/${selectedUser._id}`, { 
             headers: { Authorization: `Bearer ${currentUser.token}` } 
         });
         setUserPortfolio(res.data);
@@ -36,9 +36,9 @@ export default function GhostwriterPad({ selectedUser, currentUser }: any) {
               timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           };
           
-          const tempSocket = io('http://localhost:5000');
+          const tempSocket = io('import.meta.env.VITE_API_URL');
           tempSocket.emit('send_message', messagePayload);
-          await axios.post('http://localhost:5000/api/chat/send', messagePayload, { headers: { Authorization: `Bearer ${currentUser.token}` } });
+          await axios.post(`${import.meta.env.VITE_API_URL}/api/chat/send`, messagePayload, { headers: { Authorization: `Bearer ${currentUser.token}` } });
           
           setTimeout(() => { 
               tempSocket.disconnect(); 

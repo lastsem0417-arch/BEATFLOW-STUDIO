@@ -10,7 +10,7 @@ export default function TrendingCharts() {
   useEffect(() => {
     const fetchTrending = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/feed');
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/feed`);
         // Sort by most likes, slice top 10
         const sorted = res.data.sort((a: any, b: any) => (b.likes?.length || 0) - (a.likes?.length || 0)).slice(0, 10);
         setTrendingTracks(sorted);
